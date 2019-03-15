@@ -27,7 +27,7 @@ def evaluate_relation(dataset, split, prediction):
     # evaluate in zero-shot setting
     print('-- zero-shot setting')
     zeroshot_triplets = dataset.get_triplets(split).difference(
-            dataset.get_triplets('train'))
+        dataset.get_triplets('train'))
     groundtruth = dict()
     zs_prediction = dict()
     for vid in dataset.get_index(split):
@@ -46,36 +46,53 @@ def evaluate_relation(dataset, split, prediction):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Evaluate a set of tasks related to video relation understanding.')
-    parser.add_argument('dataset', type=str, help='the dataset name for evaluation')
-    parser.add_argument('split', type=str, help='the split name for evaluation')
-    parser.add_argument('task', choices=['object', 'action', 'relation'], help='which task to evaluate')
-    parser.add_argument('prediction', type=str, help='Corresponding prediction JSON file')
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(description='Evaluate a set of tasks related to video relation understanding.')
+    # parser.add_argument('dataset', type=str, help='the dataset name for evaluation')
+    # parser.add_argument('split', type=str, help='the split name for evaluation')
+    # parser.add_argument('task', choices=['object', 'action', 'relation'], help='which task to evaluate')
+    # parser.add_argument('prediction', type=str, help='Corresponding prediction JSON file')
+    # args = parser.parse_args()
+    #
+    # if args.dataset == 'vidvrd':
+    #     if args.task == 'relation':
+    #         # load train set for zero-shot evaluation
+    #         dataset = VidVRD('../vidvrd-dataset', '../vidvrd-dataset/videos', ['train', args.split])
+    #     else:
+    #         dataset = VidVRD('../vidvrd-dataset', '../vidvrd-dataset/videos', [args.split])
+    # elif args.dataset == 'vidor':
+    #     if args.task == 'relation':
+    #         # load train set for zero-shot evaluation
+    #         dataset = VidOR('../vidor-dataset/annotation', '../vidor-dataset/vidor', ['training', args.split],
+    #                         low_memory=True)
+    #     else:
+    #         dataset = VidOR('../vidor-dataset/annotation', '../vidor-dataset/vidor', [args.split], low_memory=True)
+    # else:
+    #     raise Exception('Unknown dataset {}'.format(args.dataset))
+    #
+    # print('Loading prediction from {}'.format(args.prediction))
+    # with open(args.prediction, 'r') as fin:
+    #     pred = json.load(fin)
+    # print('Number of videos in prediction: {}'.format(len(pred['results'])))
+    #
+    # if args.task == 'object':
+    #     evaluate_object(dataset, args.split, pred['results'])
+    # elif args.task == 'action':
+    #     evaluate_action(dataset, args.split, pred['results'])
+    # elif args.task == 'relation':
+    #     evaluate_relation(dataset, args.split, pred['results'])
 
-    if args.dataset=='vidvrd':
-        if args.task=='relation':
-            # load train set for zero-shot evaluation
-            dataset = VidVRD('../vidvrd-dataset', '../vidvrd-dataset/videos', ['train', args.split])
-        else:
-            dataset = VidVRD('../vidvrd-dataset', '../vidvrd-dataset/videos', [args.split])
-    elif args.dataset=='vidor':
-        if args.task=='relation':
-            # load train set for zero-shot evaluation
-            dataset = VidOR('../vidor-dataset/annotation', '../vidor-dataset/vidor', ['training', args.split], low_memory=True)
-        else:
-            dataset = VidOR('../vidor-dataset/annotation', '../vidor-dataset/vidor', [args.split], low_memory=True)
-    else:
-        raise Exception('Unknown dataset {}'.format(args.dataset))
+    anno_rpath = 'baseline/vidvrd-dataset'
+    video_rpath = 'baseline/vidvrd-dataset/videos'
+    splits = ['train', 'test']
+    prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_relation_prediction.json'
 
-    print('Loading prediction from {}'.format(args.prediction))
-    with open(args.prediction, 'r') as fin:
+    dataset = VidVRD(anno_rpath=anno_rpath,
+                     video_rpath=video_rpath,
+                     splits=splits)
+
+    print('Loading prediction from {}'.format(prediction))
+    with open(prediction, 'r') as fin:
         pred = json.load(fin)
     print('Number of videos in prediction: {}'.format(len(pred['results'])))
 
-    if args.task=='object':
-        evaluate_object(dataset, args.split, pred['results'])
-    elif args.task=='action':
-        evaluate_action(dataset, args.split, pred['results'])
-    elif args.task=='relation':
-        evaluate_relation(dataset, args.split, pred['results'])
+    evaluate_relation(dataset, 'test', pred['results'])
