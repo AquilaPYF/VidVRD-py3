@@ -1,9 +1,9 @@
 import os
 
-
 # Several module level utility functions
 
 vidvrd_baseline_output_path = 'baseline/vidvrd-dataset/vidvrd-baseline-output'
+
 
 def get_segment_signature(vid, fstart, fend):
     """

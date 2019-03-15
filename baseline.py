@@ -1,7 +1,5 @@
 import json
 import os
-from collections import defaultdict
-import pickle
 
 from tqdm import tqdm
 
@@ -94,56 +92,35 @@ def detect(re_detect=True):
     dataset = VidVRD(anno_rpath=anno_rpath,
                      video_rpath=video_rpath,
                      splits=splits)
+    with open(os.path.join(get_model_path(), 'baseline_setting.json'), 'r') as fin:
+        param = json.load(fin)
 
     if re_detect:
-        with open(os.path.join(get_model_path(), 'baseline_setting.json'), 'r') as fin:
-            param = json.load(fin)
         short_term_relations = model.predict(dataset, param)
 
         # save short-term predication results
-        with open(short_term_predication_path[:-5] + '.pkl', 'wb+') as stp_pkl_out_f:
-            pickle.dump(short_term_relations, stp_pkl_out_f, protocol=pickle.HIGHEST_PROTOCOL)
-        print("Successfully save short-term predication to: " + short_term_predication_path[:-5] + '.pkl')
+        # with open(short_term_predication_path[:-5] + '.pkl', 'wb+') as stp_pkl_out_f:
+        #     pickle.dump(short_term_relations, stp_pkl_out_f, protocol=pickle.HIGHEST_PROTOCOL)
+        # print("Successfully save short-term predication to: " + short_term_predication_path[:-5] + '.pkl')
 
-        # trans all of keys 2 str
-        for each_key in short_term_relations.keys():
-            short_term_relations['{}::{}::{}'.format(*each_key)] = short_term_relations[each_key]
-            del short_term_relations[each_key]
         with open(short_term_predication_path, 'w+') as stp_out_f:
             stp_out_f.write(json.dumps(short_term_relations))
         print("Successfully save short-term predication to: " + short_term_predication_path)
 
     else:
         # load short_term_relations from save file
-        # with open(short_term_predication_path, 'r') as stp_in_f:
-        #     short_term_relations = json.load(stp_in_f)
-        with open(short_term_predication_path[:-5] + '.pkl', 'rb') as stp_pkl_in_f:
-            short_term_relations = pickle.load(stp_pkl_in_f)
-            # for each_st in short_term_relations.items():
-            #     # print(each_st[0])
-            #     print(each_st[1][0])
-            #     print(len(each_st[1][1]))
-            #     print(each_st[1][2])
+        # with open(short_term_predication_path[:-5] + '.pkl', 'rb') as stp_pkl_in_f:
+        #     short_term_relations = pickle.load(stp_pkl_in_f)
 
-            # for each_key in list(short_term_relations.keys()):
-            #     short_term_relations['{}-{}-{}'.format(*each_key)] = short_term_relations[each_key]
-            #     del short_term_relations[each_key]
-            # with open(short_term_predication_path, 'w+') as stp_out_f:
-            #     json.dump(short_term_relations, stp_out_f)
-            # print("Successfully save short-term predication to: " + short_term_predication_path)
+        with open(short_term_predication_path, 'r') as stp_in_f:
+            short_term_relations = json.load(stp_in_f)
 
-
-    # group short term relations by video
-    video_st_relations = defaultdict(list)
-    for index, st_rel in short_term_relations.items():
-        vid = index[0]
-        video_st_relations[vid].append((index, st_rel))
-    # video-level visual relation detection by relational association
     print('greedy relational association ...')
     video_relations = dict()
-    for vid in tqdm(video_st_relations.keys()):
-        video_relations[vid] = association.greedy_relational_association(
-            dataset, video_st_relations[vid], max_traj_num_in_clip=100)
+    for vid in tqdm(short_term_relations.keys()):
+        res = association.greedy_relational_association(short_term_relations[vid], param['seg_topk'])
+        res = sorted(res, key=lambda r: r['score'], reverse=True)[:param['video_topk']]
+        video_relations[vid] = res
     # save detection result
     with open(os.path.join(get_model_path(), 'baseline_relation_prediction.json'), 'w') as fout:
         output = {

@@ -10,21 +10,14 @@ The baseline code for the VidVRD dataset introduced in the following paper.
 }
 ```
 
-## Baseline Quick Start
-1. Install the prerequisites
-```
-export PYTHONNOUSERSITE=1
-conda create -n vidvrd python=2.7 anaconda cmake tensorflow=1.8.0 keras tqdm ffmpeg=3.4 py-opencv
-source activate vidvrd
-pip install dlib==19.3.1 --isolated
-``` 
-2. Download precomputed features, model and detected relations from [here](http://dl.nextcenter.org/public/vidvrd/vidvrd-baseline-output.zip), and decompress the zipfile under the same folder as this repository.
-3. Run `python evaluate.py vidvrd test relation ../vidvrd-baseline-output/models/baseline_relation_prediction.json` to evaluate the precomputed detected relations. Since a few wrong labels in the dataset were corrected after paper submission, the result is slightly different from the one reported in the paper. Some qualitative results can be found [here](http://mm.zl.io).
-4. Run `python baseline.py --detect` to detect video visual relations using the precomputed model.
-5. Run `python baseline.py --train` to train a new model by adjusting the hyperparameters in the script, based on the precomputed features.
-
 ### Branch Python 3.6
 ```bash
+conda create -n tensorflow pip python=3.6
+
+source activate tensorflow
+
+pip install --ignore-installed --upgrade 	https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.12.0-cp36-cp36m-linux_x86_64.whl
+
 pip install -r requirements.txt
 
 python baseline.py

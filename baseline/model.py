@@ -12,7 +12,9 @@ from keras.layers import Input, Dense, Activation
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.utils import np_utils
+from baseline.relation import VideoRelation
 from tqdm import tqdm
+from baseline.trajectory import object_trajectory_proposal
 
 from baseline import *
 
@@ -20,7 +22,7 @@ _train_triplet_id = OrderedDict()
 
 
 def feature_preprocess(feat):
-    """ 
+    """
     Input feature is extracted according to Section 4.2 in the paper
     """
     # subject classeme + object classeme
@@ -51,7 +53,6 @@ class DataGenerator(FeatureExtractor):
     Generate (incl. sample) relation features of (subject, object)s
     in the video segments that have multiple objects detected.
     """
-
     def __init__(self, dataset, param, prefetch_count=2):
         super(DataGenerator, self).__init__(dataset, prefetch_count)
         self.rng = np.random.RandomState(param['rng_seed'])
@@ -129,9 +130,9 @@ class DataGenerator(FeatureExtractor):
             except StopIteration as e:
                 return None
             index = self.index[i]
-            pairs, feats, iou, trackid = self.extract_feature(*index)
+            pairs, feats, iou, trackid = self.extract_feature( *index)
             test_inds = [ind for ind, (traj1, traj2) in enumerate(pairs)
-                         if trackid[traj1] < 0 and trackid[traj2] < 0]
+                    if trackid[traj1] < 0 and trackid[traj2] < 0]
             pairs = pairs[test_inds]
             feats = feature_preprocess(feats[test_inds])
             feats = feats.astype(np.float32)
@@ -141,10 +142,10 @@ class DataGenerator(FeatureExtractor):
         pairs, feats, iou, trackid = self.extract_feature(vid, fstart, fend)
         feats = feats.astype(np.float32)
         pair_to_find = dict([((traj1, traj2), find)
-                             for find, (traj1, traj2) in enumerate(pairs)])
+                for find, (traj1, traj2) in enumerate(pairs)])
         tid_to_ind = dict([(tid, ind) for ind, tid in enumerate(trackid) if tid >= 0])
 
-        pos = np.empty((0, 2), dtype=np.int32)
+        pos = np.empty((0, 2), dtype = np.int32)
         for tid1, tid2, s, p, o in self.short_rel_insts[(vid, fstart, fend)]:
             if tid1 in tid_to_ind and tid2 in tid_to_ind:
                 iou1 = iou[:, tid_to_ind[tid1]]
@@ -152,7 +153,7 @@ class DataGenerator(FeatureExtractor):
                 pos_inds1 = np.where(iou1 >= iou_thres)[0]
                 pos_inds2 = np.where(iou2 >= iou_thres)[0]
                 tmp = [(pair_to_find[(traj1, traj2)], _train_triplet_id[(s, p, o)])
-                       for traj1, traj2 in product(pos_inds1, pos_inds2) if traj1 != traj2]
+                        for traj1, traj2 in product(pos_inds1, pos_inds2) if traj1 != traj2]
                 if len(tmp) > 0:
                     pos = np.concatenate((pos, tmp))
 
@@ -175,7 +176,7 @@ class SelectionLayer(Layer):
         s = K.tf.gather(inputs[0], self.sel_inds[0], axis=1)
         p = K.tf.gather(inputs[1], self.sel_inds[1], axis=1)
         o = K.tf.gather(inputs[2], self.sel_inds[2], axis=1)
-        return s * p * o
+        return s*p*o
 
     def compute_output_shape(self, input_shape):
         return None, self.sel_inds.shape[1]
@@ -224,7 +225,7 @@ def train(dataset, param):
             loss = training_model.train_on_batch([f, prob_s, prob_o], [y])
             if it % param['display_freq'] == 0:
                 print('{} - iter: {}/{} - loss: {:.4f}'.format(
-                    strftime('%Y-%m-%d %H:%M:%S'), it, param['max_iter'], float(loss)))
+                        strftime('%Y-%m-%d %H:%M:%S'), it, param['max_iter'], float(loss)))
             if it % param['save_freq'] == 0 and it > 0:
                 param['model_dump_file'] = '{}_weights_iter_{}.h5'.format(param['model_name'], it)
                 training_model.save_weights(os.path.join(get_model_path(), param['model_dump_file']))
@@ -250,12 +251,19 @@ def predict(dataset, param):
 
     print('predicting short-term visual relation...')
     pbar = tqdm(total=len(data_generator.index))
-    short_term_relations = dict()
+    short_term_relations = defaultdict(list)
     # do not support prefetching mode in test phase
     data = data_generator.get_data()
     while data:
         # get all possible pairs and the respective features and annos
         index, pairs, feats, iou, trackid = data
+        vid, fstart, fend = index
+        # load predicted object tracklets
+        tracklets = object_trajectory_proposal(dataset, vid, fstart, fend)
+        for trac in tracklets:
+            trac.pstart = fstart
+            trac.pend = fend
+            trac.vsig = get_segment_signature(vid, fstart, fend)
         # make prediction
         p = feats.dot(w) + b
         s = feats[:, :35]
@@ -265,17 +273,23 @@ def predict(dataset, param):
             top_s_ind = np.argsort(s[i])[-param['pair_topk']:]
             top_p_ind = np.argsort(p[i])[-param['pair_topk']:]
             top_o_ind = np.argsort(o[i])[-param['pair_topk']:]
-            score = s[i][top_s_ind, None, None] * p[i][None, top_p_ind, None] * o[i][None, None, top_o_ind]
-            top_flat_ind = np.argsort(score, axis=None)[-param['pair_topk']:]
+            score = s[i][top_s_ind, None, None]*p[i][None, top_p_ind, None]*o[i][None, None, top_o_ind]
+            top_flat_ind = np.argsort(score, axis = None)[-param['pair_topk']:]
             top_score = score.ravel()[top_flat_ind]
             top_s, top_p, top_o = np.unravel_index(top_flat_ind, score.shape)
             predictions.extend((
-                                   top_score[j],
-                                   (top_s_ind[top_s[j]], top_p_ind[top_p[j]], top_o_ind[top_o[j]]),
-                                   tuple(pairs[i]))
-                               for j in range(top_score.size))
+                top_score[j],
+                (top_s_ind[top_s[j]], top_p_ind[top_p[j]], top_o_ind[top_o[j]]),
+                pairs[i]
+            ) for j in range(top_score.size))
+
         predictions = sorted(predictions, key=lambda x: x[0], reverse=True)[:param['seg_topk']]
-        short_term_relations[index] = (predictions, iou, trackid)
+        for x in predictions:
+            sub = dataset.get_object_name(x[1][0])
+            pred = dataset.get_predicate_name(x[1][1])
+            obj = dataset.get_object_name(x[1][2])
+            r = VideoRelation(sub, pred, obj, tracklets[x[2][0]], tracklets[x[2][1]], x[0])
+            short_term_relations[vid].append(r.serialize())
 
         data = data_generator.get_data()
         pbar.update(1)
