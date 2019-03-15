@@ -1,0 +1,77 @@
+.
+├── baseline
+│   ├── association.py
+│   ├── feature.py
+│   ├── __init__.py
+│   ├── model.py
+│   ├── __pycache__
+│   │   ├── association.cpython-36.pyc
+│   │   ├── feature.cpython-36.pyc
+│   │   ├── __init__.cpython-36.pyc
+│   │   ├── model.cpython-36.pyc
+│   │   └── trajectory.cpython-36.pyc
+│   ├── README.md
+│   ├── trajectory.py
+│   └── vidvrd-dataset
+│       ├── test
+│       │   ├── ILSVRC2015_train_00005004.json
+│       │   ├── ILSVRC2015_val_00124001.json
+│       │   ├── ...
+│       │   └── ILSVRC2015_val_00177001.json
+│       ├── train
+│       │   ├── ILSVRC2015_train_00005003.json
+│       │   ├── ILSVRC2015_val_00169000.json
+│       │   ├── ...
+│       │   └── ILSVRC2015_val_00173001.json
+│       ├── videos
+│       │   ├── ILSVRC2015_val_00173001.mp4
+│       │   ├── ...
+│       │   └── ILSVRC2015_val_00177001.mp4
+│       └── vidvrd-baseline-output
+│           ├── features
+│           │   ├── relation
+│           │   │   ├── ILSVRC2015_train_00005003
+│           │   │   │   ├── ILSVRC2015_train_00005003-0000-0030-relation.h5
+│           │   │   │   ├── ILSVRC2015_train_00005003-0015-0045-relation.h5
+│           │   │   │   └── ILSVRC2015_train_00005003-0030-0060-relation.h5
+│           │   │   ├── ...
+│           │       └── ILSVRC2015_val_00177001
+│           │           ├── ILSVRC2015_val_00177001-0000-0030-traj_cls_gt.json
+│           │           ├── ILSVRC2015_val_00177001-0015-0045-traj_cls_gt.json
+│           │           ├── ILSVRC2015_val_00177001-0030-0060-traj_cls_gt.json
+│           │           ├── ILSVRC2015_val_00177001-0045-0075-traj_cls_gt.json
+│           │           ├── ILSVRC2015_val_00177001-0060-0090-traj_cls_gt.json
+│           │           ├── ILSVRC2015_val_00177001-0075-0105-traj_cls_gt.json
+│           │           ├── ILSVRC2015_val_00177001-0090-0120-traj_cls_gt.json
+│           │           └── ILSVRC2015_val_00177001-0105-0135-traj_cls_gt.json
+│           └── models
+│               ├── baseline_relation_prediction.json
+│               ├── baseline_setting.json
+│               └── baseline_weights_iter_5000.h5
+├── baseline.py
+├── dataset
+│   ├── dataset.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── dataset.cpython-36.pyc
+│   │   ├── __init__.cpython-36.pyc
+│   │   ├── vidor.cpython-36.pyc
+│   │   └── vidvrd.cpython-36.pyc
+│   ├── README.md
+│   ├── vidor.py
+│   └── vidvrd.py
+├── evaluate.py
+├── evaluation
+│   ├── action_detection.py
+│   ├── common.py
+│   ├── __init__.py
+│   ├── README.md
+│   ├── video_object_detection.py
+│   └── visual_relation_detection.py
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── tree.txt
+└── visualize.py
+
+3128 directories, 19586 files

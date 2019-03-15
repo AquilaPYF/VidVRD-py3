@@ -1,0 +1,7 @@
+tensorflow
+keras
+requests
+tqdm
+dlib
+numpy
+h5py

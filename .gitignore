@@ -1,0 +1,10 @@
+*.pyc
+__pycache__/
+
+.vscode/
+
+.idea/
+
+baseline/features/*
+baseline/models/*
+baseline/vidvrd-dataset/*
