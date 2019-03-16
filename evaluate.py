@@ -19,11 +19,11 @@ def evaluate_action(dataset, split, prediction):
     mean_ap, ap_class = eval_action(groundtruth, prediction)
 
 
-def evaluate_relation(dataset, split, prediction):
+def evaluate_relation(dataset, split, prediction, base_on_gt=True):
     groundtruth = dict()
     for vid in dataset.get_index(split):
         groundtruth[vid] = dataset.get_relation_insts(vid)
-    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, prediction)
+    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, prediction, base_on_gt=base_on_gt)
     # evaluate in zero-shot setting
     print('-- zero-shot setting')
     zeroshot_triplets = dataset.get_triplets(split).difference(
@@ -95,4 +95,4 @@ if __name__ == '__main__':
         pred = json.load(fin)
     print('Number of videos in prediction: {}'.format(len(pred['results'])))
 
-    evaluate_relation(dataset, 'test', pred['results'])
+    evaluate_relation(dataset, 'test', pred['results'], base_on_gt=False)
