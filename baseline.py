@@ -9,9 +9,25 @@ from dataset import VidVRD
 
 # could modify these paths
 anno_rpath = 'baseline/vidvrd-dataset'
-video_rpath = 'baseline/vidvrd-dataset/videos'
+video_rpath = os.path.join(anno_rpath, 'videos')
 splits = ['train', 'test']
-short_term_predication_path = os.path.join(anno_rpath, 'vidvrd-baseline-output/short-term-predication.json')
+
+# If u need 2 test u own short-term-predication, set this True
+need_2_re4mat = True
+
+# Put u short-term-predication json file 2
+#  'baseline/vidvrd-dataset/vidvrd-baseline-output/result.json'
+raw_result_json_file = 'result.json'    # U own json file name, could modify
+
+
+if need_2_re4mat:
+    stp_results_root_path = os.path.join(anno_rpath, 'vidvrd-baseline-output')
+    with open(os.path.join(stp_results_root_path, raw_result_json_file), 'r') as in_f:
+        with open(os.path.join(stp_results_root_path, 'results_re4mat.json'), 'w+') as out_f:
+            out_f.write(json.dumps(json.load(in_f)['results']))
+
+# short_term_predication_path = os.path.join(anno_rpath, 'vidvrd-baseline-output/short-term-predication.json')
+short_term_predication_path = os.path.join(anno_rpath, 'vidvrd-baseline-output/results_re4mat.json')
 
 
 def load_object_trajectory_proposal():
