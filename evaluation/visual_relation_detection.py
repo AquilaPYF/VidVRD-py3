@@ -1,5 +1,6 @@
 from collections import defaultdict
 import numpy as np
+import json
 
 from .common import voc_ap, viou
 
@@ -42,12 +43,12 @@ def eval_tagging_scores(gt_relations, pred_relations):
     hit_scores = []
     for r in pred_relations:
         triplet = tuple(r['triplet'])
-        if not triplet in pred_triplets:
+        if triplet not in pred_triplets:
             pred_triplets.append(triplet)
             hit_scores.append(r['score'])
     hit_scores = np.asarray(hit_scores)
     for i, t in enumerate(pred_triplets):
-        if not t in gt_triplets:
+        if t not in gt_triplets:
             hit_scores[i] = -np.inf
     tp = np.isfinite(hit_scores)
     fp = ~tp
@@ -58,11 +59,85 @@ def eval_tagging_scores(gt_relations, pred_relations):
     return prec, rec, hit_scores
 
 
+def evaluate_segs(groundtruth, prediction, base_on_gt=True, viou_threshold=0.5,
+                  det_nreturns=[50, 100], tag_nreturns=[1, 5, 10]):
+    """
+    evaluate VRD on segments level
+    :return:
+    """
+    if not base_on_gt:
+        # base on prediction segments
+        print('Computing average precision AP over {}({}) videos...'.format('prediction', len(prediction)))
+        print('This evaluation is based segments, traversal on predictions...')
+        seg_ap = dict()
+        tot_scores = defaultdict(list)
+        tot_tp = defaultdict(list)
+        prec_at_n = defaultdict(list)
+        tot_pred_relations = 0
+
+        # split on segments
+        for vid, pred_relations in prediction.items():
+            if len(pred_relations) == 0:
+                continue
+            tot_pred_relations += len(pred_relations)
+            gt_relations = groundtruth[vid]
+            # generate each seg gt
+            for each_gt_seg in gt_relations:
+
+                # compute average precision and recalls in detection setting
+                det_prec, det_rec, det_scores = eval_detection_scores(
+                    [each_gt_seg], pred_relations, viou_threshold)
+                seg_ap[vid] = voc_ap(det_rec, det_prec)
+                tp = np.isfinite(det_scores)
+                for nre in det_nreturns:
+                    cut_off = min(nre, det_scores.size)
+                    tot_scores[nre].append(det_scores[:cut_off])
+                    tot_tp[nre].append(tp[:cut_off])
+                # compute precisions in tagging setting
+                tag_prec, _, _ = eval_tagging_scores([each_gt_seg], pred_relations)
+                for nre in tag_nreturns:
+                    cut_off = min(nre, tag_prec.size)
+                    if cut_off > 0:
+                        prec_at_n[nre].append(tag_prec[cut_off - 1])
+                    else:
+                        prec_at_n[nre].append(0.)
+        # calculate mean ap for detection
+        mean_ap = np.mean(list(seg_ap.values()))
+        # calculate recall for detection
+        rec_at_n = dict()
+        for nre in det_nreturns:
+            scores = np.concatenate(tot_scores[nre])
+            tps = np.concatenate(tot_tp[nre])
+            sort_indices = np.argsort(scores)[::-1]
+            tps = tps[sort_indices]
+            cum_tp = np.cumsum(tps).astype(np.float32)
+            rec = cum_tp / np.maximum(tot_pred_relations, np.finfo(np.float32).eps)
+            rec_at_n[nre] = rec[-1]
+        # calculate mean precision for tagging
+        mprec_at_n = dict()
+        for nre in tag_nreturns:
+            mprec_at_n[nre] = np.mean(prec_at_n[nre])
+    else:
+        print("What???")
+        exit(0)
+
+    # print scores
+    print(
+        'This result of evaluation is based on: {}'.format(
+            '200 groundtruth test set' if base_on_gt else 'predictions'))
+    print('detection mean AP (used in challenge): {}'.format(mean_ap))
+    print('detection recall@50: {}'.format(rec_at_n[50]))
+    print('detection recall@100: {}'.format(rec_at_n[100]))
+    print('tagging precision@1: {}'.format(mprec_at_n[1]))
+    print('tagging precision@5: {}'.format(mprec_at_n[5]))
+    print('tagging precision@10: {}'.format(mprec_at_n[10]))
+    return mean_ap, rec_at_n, mprec_at_n
+
+
 def evaluate(groundtruth, prediction, base_on_gt=True, viou_threshold=0.5,
              det_nreturns=[50, 100], tag_nreturns=[1, 5, 10]):
     """
-    evaluate visual relation detection and visual
-    relation tagging.
+    evaluate visual relation detection and visual relation tagging.
     """
     if base_on_gt:
         print('Computing average precision AP over {}({}) videos...'.format('groundtruth', len(groundtruth)))
@@ -158,7 +233,8 @@ def evaluate(groundtruth, prediction, base_on_gt=True, viou_threshold=0.5,
             mprec_at_n[nre] = np.mean(prec_at_n[nre])
 
     # print scores
-    print('This result of evaluation is based on: {}'.format('200 groundtruth test set' if base_on_gt else 'predictions'))
+    print(
+        'This result of evaluation is based on: {}'.format('200 groundtruth test set' if base_on_gt else 'predictions'))
     print('detection mean AP (used in challenge): {}'.format(mean_ap))
     print('detection recall@50: {}'.format(rec_at_n[50]))
     print('detection recall@100: {}'.format(rec_at_n[100]))
@@ -166,30 +242,3 @@ def evaluate(groundtruth, prediction, base_on_gt=True, viou_threshold=0.5,
     print('tagging precision@5: {}'.format(mprec_at_n[5]))
     print('tagging precision@10: {}'.format(mprec_at_n[10]))
     return mean_ap, rec_at_n, mprec_at_n
-
-
-if __name__ == "__main__":
-    """
-    You can directly run this script from the parent directory, e.g.,
-    python -m evaluation.visual_relation_detection val_relation_groundtruth.json val_relation_prediction.json
-    """
-    import json
-    from argparse import ArgumentParser
-
-    parser = ArgumentParser(description='Video visual relation detection evaluation.')
-    parser.add_argument('groundtruth', type=str, help='A ground truth JSON file generated by yourself')
-    parser.add_argument('prediction', type=str, help='A prediction file')
-    args = parser.parse_args()
-
-    print('Loading ground truth from {}'.format(args.groundtruth))
-    with open(args.groundtruth, 'r') as fp:
-        gt = json.load(fp)
-    print('Number of videos in ground truth: {}'.format(len(gt)))
-
-    print('Loading prediction from {}'.format(args.prediction))
-    with open(args.prediction, 'r') as fp:
-        pred = json.load(fp)
-    print('Number of videos in prediction: {}'.format(len(pred['results'])))
-
-    # evaluation
-    mean_ap, rec_at_n, mprec_at_n = evaluate(gt, pred['results'], base_on_gt=False)

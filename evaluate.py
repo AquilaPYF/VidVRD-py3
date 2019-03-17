@@ -2,7 +2,7 @@ import json
 import argparse
 
 from dataset import VidVRD, VidOR
-from evaluation import eval_video_object, eval_action, eval_visual_relation
+from evaluation import eval_video_object, eval_action, eval_visual_relation, eval_visual_relation_segs
 
 
 def evaluate_object(dataset, split, prediction):
@@ -23,7 +23,8 @@ def evaluate_relation(dataset, split, prediction, base_on_gt=True):
     groundtruth = dict()
     for vid in dataset.get_index(split):
         groundtruth[vid] = dataset.get_relation_insts(vid)
-    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, prediction, base_on_gt=base_on_gt)
+    # mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, prediction, base_on_gt=base_on_gt)
+    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation_segs(groundtruth, prediction, base_on_gt=base_on_gt)
     # evaluate in zero-shot setting
     print('-- zero-shot setting')
     zeroshot_triplets = dataset.get_triplets(split).difference(
@@ -95,4 +96,5 @@ if __name__ == '__main__':
         pred = json.load(fin)
     print('Number of videos in prediction: {}'.format(len(pred['results'])))
 
-    evaluate_relation(dataset, 'test', pred['results'], base_on_gt=False)
+    # modify the split ['train', 'test']
+    evaluate_relation(dataset, 'train', pred['results'], base_on_gt=False)
