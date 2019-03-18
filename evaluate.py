@@ -24,26 +24,28 @@ def evaluate_relation(dataset, split, prediction, base_on_gt=True):
     for vid in dataset.get_index(split):
         groundtruth[vid] = dataset.get_relation_insts(vid)
     # mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, prediction, base_on_gt=base_on_gt)
-    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation_segs(groundtruth, prediction, base_on_gt=base_on_gt)
-    # evaluate in zero-shot setting
-    print('-- zero-shot setting')
-    zeroshot_triplets = dataset.get_triplets(split).difference(
-        dataset.get_triplets('train'))
-    groundtruth = dict()
-    zs_prediction = dict()
-    for vid in dataset.get_index(split):
-        gt_relations = dataset.get_relation_insts(vid)
-        zs_gt_relations = []
-        for r in gt_relations:
-            if tuple(r['triplet']) in zeroshot_triplets:
-                zs_gt_relations.append(r)
-        if len(zs_gt_relations) > 0:
-            groundtruth[vid] = zs_gt_relations
-            zs_prediction[vid] = []
-            for r in prediction[vid]:
-                if tuple(r['triplet']) in zeroshot_triplets:
-                    zs_prediction[vid].append(r)
-    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, zs_prediction)
+    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation_segs(groundtruth, prediction,
+                                                              base_on_gt=base_on_gt, viou_threshold=0.5)
+
+    # # evaluate in zero-shot setting, if u need
+    # print('-- zero-shot setting')
+    # zeroshot_triplets = dataset.get_triplets(split).difference(
+    #     dataset.get_triplets('train'))
+    # groundtruth = dict()
+    # zs_prediction = dict()
+    # for vid in dataset.get_index(split):
+    #     gt_relations = dataset.get_relation_insts(vid)
+    #     zs_gt_relations = []
+    #     for r in gt_relations:
+    #         if tuple(r['triplet']) in zeroshot_triplets:
+    #             zs_gt_relations.append(r)
+    #     if len(zs_gt_relations) > 0:
+    #         groundtruth[vid] = zs_gt_relations
+    #         zs_prediction[vid] = []
+    #         for r in prediction[vid]:
+    #             if tuple(r['triplet']) in zeroshot_triplets:
+    #                 zs_prediction[vid].append(r)
+    # mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(groundtruth, zs_prediction)
 
 
 if __name__ == '__main__':
@@ -85,7 +87,8 @@ if __name__ == '__main__':
     anno_rpath = 'baseline/vidvrd-dataset'
     video_rpath = 'baseline/vidvrd-dataset/videos'
     splits = ['train', 'test']
-    prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_relation_prediction.json'
+    # prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_relation_prediction.json'
+    prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/result.json'
 
     dataset = VidVRD(anno_rpath=anno_rpath,
                      video_rpath=video_rpath,
