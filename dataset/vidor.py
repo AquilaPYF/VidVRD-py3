@@ -22,17 +22,19 @@ class VidOR(DatasetV1):
 
     def _get_anno_files(self, split):
         anno_files = glob.glob(os.path.join(self.anno_rpath, '{}/*/*.json'.format(split)))
-        assert len(anno_files)>0, 'No annotation file found for \'{}\'. Please check if the directory is correct.'.format(split)
+        assert len(
+            anno_files) > 0, 'No annotation file found for \'{}\'. Please check if the directory is correct.'.format(
+            split)
         return anno_files
 
     def _get_action_predicates(self):
         actions = [
-            'watch','bite','kiss','lick','smell','caress','knock','pat',
-            'point_to','squeeze','hold','press','touch','hit','kick',
-            'lift','throw','wave','carry','grab','release','pull',
-            'push','hug','lean_on','ride','chase','get_on','get_off',
-            'hold_hand_of','shake_hand_with','wave_hand_to','speak_to','shout_at','feed',
-            'open','close','use','cut','clean','drive','play(instrument)',
+            'watch', 'bite', 'kiss', 'lick', 'smell', 'caress', 'knock', 'pat',
+            'point_to', 'squeeze', 'hold', 'press', 'touch', 'hit', 'kick',
+            'lift', 'throw', 'wave', 'carry', 'grab', 'release', 'pull',
+            'push', 'hug', 'lean_on', 'ride', 'chase', 'get_on', 'get_off',
+            'hold_hand_of', 'shake_hand_with', 'wave_hand_to', 'speak_to', 'shout_at', 'feed',
+            'open', 'close', 'use', 'cut', 'clean', 'drive', 'play(instrument)',
         ]
         for action in actions:
             assert action in self.pred2pid
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description='Generate a single JSON groundtruth file for videos')
-    parser.add_argument('split', choices=['training', 'validation'], 
+    parser.add_argument('split', choices=['training', 'validation'],
                         help='which dataset split the groundtruth generated for')
     parser.add_argument('task', choices=['object', 'action', 'relation'],
                         help='which task the groundtruth generated for')
@@ -60,18 +62,19 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # to load the trainning set without low memory mode for faster processing, you need sufficient large RAM
-    dataset = VidOR('../vidor-dataset/annotation', '../vidor-dataset/vidor', ['training', 'validation'], low_memory=True)
+    dataset = VidOR('../vidor-dataset/annotation', '../vidor-dataset/vidor', ['training', 'validation'],
+                    low_memory=True)
     index = dataset.get_index(args.split)
 
     gts = dict()
     for ind in index:
-        if args.task=='object':
+        if args.task == 'object':
             gt = dataset.get_object_insts(ind)
-        elif args.task=='action':
+        elif args.task == 'action':
             gt = dataset.get_action_insts(ind)
-        elif args.task=='relation':
+        elif args.task == 'relation':
             gt = dataset.get_relation_insts(ind)
         gts[ind] = gt
-    
+
     with open(args.output, 'w') as fout:
         json.dump(gts, fout, separators=(',', ':'))

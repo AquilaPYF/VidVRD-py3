@@ -5,3 +5,4 @@ tqdm
 dlib
 numpy
 h5py
+opencv-python
