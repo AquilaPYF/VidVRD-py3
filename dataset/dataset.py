@@ -57,17 +57,26 @@ class Dataset(object):
         for i, name in enumerate(pred):
             self.pid2pred[i] = name
             self.pred2pid[name] = i
-    
+
+        # with open('soid2so.json', 'w+') as out_f:
+        #     out_f.write(json.dumps(self.soid2so))
+        # with open('so2soid.json', 'w+') as out_f:
+        #     out_f.write(json.dumps(self.so2soid))
+        # with open('pid2pred.json', 'w+') as out_f:
+        #     out_f.write(json.dumps(self.pid2pred))
+        # with open('pred2pid.json', 'w+') as out_f:
+        #     out_f.write(json.dumps(self.pred2pid))
+
     def _check_anno(self, anno):
         assert 'version' not in anno
         return anno
 
     def _get_anno_files(self, split):
         raise NotImplementedError
-    
+
     def get_video_path(self, vid):
         raise NotImplementedError
-    
+
     def _get_action_predicates(self):
         raise NotImplementedError
 
@@ -129,9 +138,9 @@ class Dataset(object):
         for fid, frame in enumerate(anno['trajectories']):
             for roi in frame:
                 traj[roi['tid']][str(fid)] = (roi['bbox']['xmin'],
-                                            roi['bbox']['ymin'],
-                                            roi['bbox']['xmax'],
-                                            roi['bbox']['ymax'])
+                                              roi['bbox']['ymin'],
+                                              roi['bbox']['xmax'],
+                                              roi['bbox']['ymax'])
         for tid in traj:
             object_insts.append({
                 'category': tid2cls[tid],
@@ -185,24 +194,24 @@ class Dataset(object):
                 bboxes = dict()
                 for bbox in frame:
                     bboxes[bbox['tid']] = (bbox['bbox']['xmin'],
-                                        bbox['bbox']['ymin'],
-                                        bbox['bbox']['xmax'],
-                                        bbox['bbox']['ymax'])
+                                           bbox['bbox']['ymin'],
+                                           bbox['bbox']['xmax'],
+                                           bbox['bbox']['ymax'])
                 trajs.append(bboxes)
         relation_insts = []
         for anno_inst in anno['relation_instances']:
             inst = dict()
             inst['triplet'] = (sub_objs[anno_inst['subject_tid']],
-                            anno_inst['predicate'],
-                            sub_objs[anno_inst['object_tid']])
+                               anno_inst['predicate'],
+                               sub_objs[anno_inst['object_tid']])
             inst['subject_tid'] = anno_inst['subject_tid']
             inst['object_tid'] = anno_inst['object_tid']
             inst['duration'] = (anno_inst['begin_fid'], anno_inst['end_fid'])
             if not no_traj:
                 inst['sub_traj'] = [bboxes[anno_inst['subject_tid']] for bboxes in
-                        trajs[inst['duration'][0]: inst['duration'][1]]]
+                                    trajs[inst['duration'][0]: inst['duration'][1]]]
                 inst['obj_traj'] = [bboxes[anno_inst['object_tid']] for bboxes in
-                        trajs[inst['duration'][0]: inst['duration'][1]]]
+                                    trajs[inst['duration'][0]: inst['duration'][1]]]
             relation_insts.append(inst)
         return relation_insts
 
@@ -228,7 +237,7 @@ class DatasetV1(Dataset):
         self._load_annotations(splits)
 
     def _check_anno(self, anno):
-        assert 'version' in anno and anno['version']=='VERSION 1.0'
+        assert 'version' in anno and anno['version'] == 'VERSION 1.0'
         if self.low_memory:
             del anno['trajectories']
         return anno

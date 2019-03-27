@@ -163,7 +163,7 @@ def traj_iou(trajs1, trajs2):
     return iou
 
 
-def object_trajectory_proposal(dataset, vid, fstart, fend, gt=False, verbose=False):
+def object_trajectory_proposal(vid, fstart, fend, gt=False, verbose=False):
     """
     Set gt=True for providing groundtruth bounding box trajectories and
     predicting classme feature only
@@ -183,3 +183,7 @@ def object_trajectory_proposal(dataset, vid, fstart, fend, gt=False, verbose=Fal
             print('no object {} proposal for video segment {}'.format(name, vsig))
         trajs = []
     return trajs
+
+
+if __name__ == '__main__':
+    print(object_trajectory_proposal('ILSVRC2015_train_00005004', 0, 30))
