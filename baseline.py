@@ -119,6 +119,7 @@ def detect(re_detect=True):
         #     pickle.dump(short_term_relations, stp_pkl_out_f, protocol=pickle.HIGHEST_PROTOCOL)
         # print("Successfully save short-term predication to: " + short_term_predication_path[:-5] + '.pkl')
 
+        exit(0)
         with open(short_term_predication_path, 'w+') as stp_out_f:
             stp_out_f.write(json.dumps(short_term_relations))
         print("Successfully save short-term predication to: " + short_term_predication_path)
@@ -167,4 +168,4 @@ if __name__ == '__main__':
     # could run directly on Pycharm:
     # train()
 
-    detect(False)
+    detect()

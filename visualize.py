@@ -195,15 +195,15 @@ def visualize(anno, video_path, out_path, pred=False):
             xmax = int(round(x['bbox']['xmax'] * ratio)) + boundary
             ymin = int(round(x['bbox']['ymin'] * ratio)) + boundary
             ymax = int(round(x['bbox']['ymax'] * ratio)) + boundary
-            bbox_thickness = 1
+            bbox_thickness = 2
             sub_name = '{}.{}'.format(x['tid'] + 1, subobj[x['tid']]['name'])
             sub_color = subobj[x['tid']]['color']
             font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scalar = 0.5
-            font_thickness = 1
+            font_scalar = 1
+            font_thickness = 2
             font_size, font_baseline = cv2.getTextSize(sub_name, font, font_scalar, font_thickness)
-            h_font_scalar = 0.8
-            h_font_thickness = 2
+            h_font_scalar = 1.5
+            h_font_thickness = 3
             h_font_size, h_font_baseline = cv2.getTextSize(sub_name, font, h_font_scalar, h_font_thickness)
             # draw subject
             cv2.rectangle(video[i], (xmin, ymin), (xmax, ymax), sub_color[::-1], bbox_thickness)
@@ -233,42 +233,50 @@ def visualize(anno, video_path, out_path, pred=False):
                         y += font_size[1] + font_baseline
 
     write_video(video, anno['fps'], size, out_path)
+    print("save to:", out_path)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Visualize annotation in video')
-    parser.add_argument('-video', type=str, help='Root path of videos')
-    parser.add_argument('-anno', type=str, help='A annotation json file or a directory of annotation jsons')
-    parser.add_argument('-out', type=str, help='Root path of output videos')
-    parser.add_argument('-pred', type=ast.literal_eval, default=False, help='If need 2 visualize pred, set this True')
-    parser.add_argument('-pred_anno', type=str, help='Root path of predication json')
+    # parser = argparse.ArgumentParser(description='Visualize annotation in video')
+    # parser.add_argument('-video', type=str, help='Root path of videos')
+    # parser.add_argument('-anno', type=str, help='A annotation json file or a directory of annotation jsons')
+    # parser.add_argument('-out', type=str, help='Root path of output videos')
+    # parser.add_argument('-pred', type=ast.literal_eval, default=False, help='If need 2 visualize pred, set this True')
+    # parser.add_argument('-pred_anno', type=str, help='Root path of predication json')
+    #
+    # args = parser.parse_args()
+    #
+    # if args.pred:
+    #     # e.g.
+    #     # python visualize.py \
+    #     #   -video /home/daivd/PycharmProjects/vidor \
+    #     #   -anno /home/daivd/PycharmProjects/vidor/annotation \
+    #     #   -out /home/daivd/Desktop/testout \
+    #     #   -pred True \
+    #     #   -pred_anno /home/daivd/Desktop/test.json
+    #     visualiza_pred(args.pred_anno, args.anno, args.video, 'vidor', ['validation'])
+    # else:
+    #     if os.path.isdir(args.anno):
+    #         anno_paths = glob.glob('{}/*.json'.format(args.anno))
+    #         args.out = os.path.join(args.out, os.path.basename(os.path.normpath(args.anno)))
+    #         if not os.path.exists(args.out):
+    #             os.mkdir(args.out)
+    #     else:
+    #         anno_paths = [args.anno]
+    #
+    #     for i in trange(len(anno_paths)):
+    #         with open(anno_paths[i], 'r') as fin:
+    #             anno = json.load(fin)
+    #         if 'video_path' in anno:
+    #             video_path = os.path.join(args.video, anno['video_path'])
+    #         else:
+    #             video_path = os.path.join(args.video, '{}.mp4'.format(anno['video_id']))
+    #         out_path = os.path.join(args.out, '{}.mp4'.format(anno['video_id']))
+    #         visualize(anno, video_path, out_path)
 
-    args = parser.parse_args()
-
-    if args.pred:
-        # e.g.
-        # python visualize.py \
-        #   -video /home/daivd/PycharmProjects/vidor \
-        #   -anno /home/daivd/PycharmProjects/vidor/annotation \
-        #   -out /home/daivd/Desktop/testout \
-        #   -pred True \
-        #   -pred_anno /home/daivd/Desktop/test.json
-        visualiza_pred(args.pred_anno, args.anno, args.video, 'vidor', ['validation'])
-    else:
-        if os.path.isdir(args.anno):
-            anno_paths = glob.glob('{}/*.json'.format(args.anno))
-            args.out = os.path.join(args.out, os.path.basename(os.path.normpath(args.anno)))
-            if not os.path.exists(args.out):
-                os.mkdir(args.out)
-        else:
-            anno_paths = [args.anno]
-
-        for i in trange(len(anno_paths)):
-            with open(anno_paths[i], 'r') as fin:
-                anno = json.load(fin)
-            if 'video_path' in anno:
-                video_path = os.path.join(args.video, anno['video_path'])
-            else:
-                video_path = os.path.join(args.video, '{}.mp4'.format(anno['video_id']))
-            out_path = os.path.join(args.out, '{}.mp4'.format(anno['video_id']))
-            visualize(anno, video_path, out_path)
+    anno = '/home/daivd/PycharmProjects/vidor/annotation/training/0001/9231052427.json'
+    video_path = '/home/daivd/PycharmProjects/vidor/training/0001/9231052427.mp4'
+    out_path = '/home/daivd/Desktop/test/test.mp4'
+    with open(anno, 'r') as in_f:
+        anno_json = json.load(in_f)
+    visualize(anno_json, video_path, out_path)
