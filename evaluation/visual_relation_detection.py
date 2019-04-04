@@ -62,32 +62,24 @@ def eval_tagging_scores(gt_relations, pred_relations):
 
 
 def separate_vid_2_seg(gt_relations):
-    # find out max seg end
-    max_seg_end = 0
-    for each_rela_ins in gt_relations:
-        each_ins_seg_end = each_rela_ins['duration'][1]
-        if max_seg_end < each_ins_seg_end:
-            max_seg_end = each_ins_seg_end
-
     seg_list = []
-    for start_f in range(0, max_seg_end - 15, 15):
-        end_f = start_f + 30
-        seg_insts = []      # take this as videos
-        for each_rela_ins in gt_relations:
-            each_ins_s, each_ins_e = each_rela_ins['duration']
-            if each_ins_s <= start_f and each_ins_e >= end_f:
-                seg_ins_s_traj = each_rela_ins['sub_traj'][start_f - each_ins_s: end_f - each_ins_s]
-                seg_ins_o_traj = each_rela_ins['obj_traj'][start_f - each_ins_s: end_f - each_ins_s]
+    for each_rela_ins in gt_relations:
+        seg_insts = []
+        each_ins_s, each_ins_e = each_rela_ins['duration']
+        for start_f in range(each_ins_s, each_ins_e - 15, 15):
+            end_f = start_f + 30
+            seg_ins_s_traj = each_rela_ins['sub_traj'][start_f - each_ins_s: end_f - each_ins_s]
+            seg_ins_o_traj = each_rela_ins['obj_traj'][start_f - each_ins_s: end_f - each_ins_s]
 
-                seg_ins = {
-                    "triplet": each_rela_ins['triplet'],
-                    "subject_tid": each_rela_ins['subject_tid'],
-                    "object_tid": each_rela_ins['object_tid'],
-                    "duration": [start_f, end_f],
-                    "sub_traj": seg_ins_s_traj,
-                    "obj_traj": seg_ins_o_traj
-                }
-                seg_insts.append(seg_ins)
+            seg_ins = {
+                "triplet": each_rela_ins['triplet'],
+                "subject_tid": each_rela_ins['subject_tid'],
+                "object_tid": each_rela_ins['object_tid'],
+                "duration": [start_f, end_f],
+                "sub_traj": seg_ins_s_traj,
+                "obj_traj": seg_ins_o_traj
+            }
+            seg_insts.append(seg_ins)
         seg_list.append(seg_insts)
     return seg_list
 
@@ -100,32 +92,29 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
     """
     print('Computing average precision AP over {}({}) videos...'.format('prediction', len(prediction)))
     print('This evaluation is based segments, traversal on predictions...')
-    seg_ap = dict()
+
+    video_ap = dict()
     tot_scores = defaultdict(list)
     tot_tp = defaultdict(list)
     prec_at_n = defaultdict(list)
-    tot_pred_relations = 0
-
-    # split on segments
-    for vid, pred_relations in prediction.items():
-        if len(pred_relations) == 0:
-            continue
-        tot_pred_relations += len(pred_relations)
-        gt_relations = groundtruth[vid]
-        # generate each seg gt
-        for each_seg_insts in separate_vid_2_seg(gt_relations):
-
+    tot_gt_relations = 0
+    for vid, gt_relations in groundtruth.items():
+        for each_gt_relations in separate_vid_2_seg(gt_relations):
+            if len(each_gt_relations) == 0:
+                continue
+            tot_gt_relations += len(each_gt_relations)
+            predict_relations = prediction[vid]
             # compute average precision and recalls in detection setting
             det_prec, det_rec, det_scores = eval_detection_scores(
-                each_seg_insts, pred_relations, viou_threshold)
-            seg_ap[vid] = voc_ap(det_rec, det_prec)
+                each_gt_relations, predict_relations, viou_threshold)
+            video_ap[vid] = voc_ap(det_rec, det_prec)
             tp = np.isfinite(det_scores)
             for nre in det_nreturns:
                 cut_off = min(nre, det_scores.size)
                 tot_scores[nre].append(det_scores[:cut_off])
                 tot_tp[nre].append(tp[:cut_off])
             # compute precisions in tagging setting
-            tag_prec, _, _ = eval_tagging_scores(each_seg_insts, pred_relations)
+            tag_prec, _, _ = eval_tagging_scores(each_gt_relations, predict_relations)
             for nre in tag_nreturns:
                 cut_off = min(nre, tag_prec.size)
                 if cut_off > 0:
@@ -133,7 +122,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
                 else:
                     prec_at_n[nre].append(0.)
     # calculate mean ap for detection
-    mean_ap = np.mean(list(seg_ap.values()))
+    mean_ap = np.mean(list(video_ap.values()))
     # calculate recall for detection
     rec_at_n = dict()
     for nre in det_nreturns:
@@ -142,7 +131,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
         sort_indices = np.argsort(scores)[::-1]
         tps = tps[sort_indices]
         cum_tp = np.cumsum(tps).astype(np.float32)
-        rec = cum_tp / np.maximum(tot_pred_relations, np.finfo(np.float32).eps)
+        rec = cum_tp / np.maximum(tot_gt_relations, np.finfo(np.float32).eps)
         rec_at_n[nre] = rec[-1]
     # calculate mean precision for tagging
     mprec_at_n = dict()
