@@ -62,24 +62,33 @@ def eval_tagging_scores(gt_relations, pred_relations):
 
 
 def separate_vid_2_seg(gt_relations):
-    seg_list = []
+    # find out max seg end
+    max_seg_end = 0
     for each_rela_ins in gt_relations:
-        seg_insts = []
-        each_ins_s, each_ins_e = each_rela_ins['duration']
-        for start_f in range(each_ins_s, each_ins_e - 15, 15):
-            end_f = start_f + 30
-            seg_ins_s_traj = each_rela_ins['sub_traj'][start_f - each_ins_s: end_f - each_ins_s]
-            seg_ins_o_traj = each_rela_ins['obj_traj'][start_f - each_ins_s: end_f - each_ins_s]
+        each_ins_seg_end = each_rela_ins['duration'][1]
+        if max_seg_end < each_ins_seg_end:
+            max_seg_end = each_ins_seg_end
 
-            seg_ins = {
-                "triplet": each_rela_ins['triplet'],
-                "subject_tid": each_rela_ins['subject_tid'],
-                "object_tid": each_rela_ins['object_tid'],
-                "duration": [start_f, end_f],
-                "sub_traj": seg_ins_s_traj,
-                "obj_traj": seg_ins_o_traj
-            }
-            seg_insts.append(seg_ins)
+    seg_list = []
+    for start_f in range(0, max_seg_end - 15, 15):
+        end_f = start_f + 30
+        seg_insts = []
+
+        for each_rela_ins in gt_relations:
+            each_ins_s, each_ins_e = each_rela_ins['duration']
+            if each_ins_s <= start_f and end_f <= each_ins_e:
+                seg_ins_s_traj = each_rela_ins['sub_traj'][start_f - each_ins_s: end_f - each_ins_s]
+                seg_ins_o_traj = each_rela_ins['obj_traj'][start_f - each_ins_s: end_f - each_ins_s]
+
+                seg_ins = {
+                    "triplet": each_rela_ins['triplet'],
+                    "subject_tid": each_rela_ins['subject_tid'],
+                    "object_tid": each_rela_ins['object_tid'],
+                    "duration": [start_f, end_f],
+                    "sub_traj": seg_ins_s_traj,
+                    "obj_traj": seg_ins_o_traj
+                }
+                seg_insts.append(seg_ins)
         seg_list.append(seg_insts)
     return seg_list
 
@@ -103,7 +112,12 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
             if len(each_gt_relations) == 0:
                 continue
             tot_gt_relations += len(each_gt_relations)
-            predict_relations = prediction[vid]
+            seg_duration = each_gt_relations[0]['duration']
+            predict_relations = []
+            for each_pred_rela in prediction[vid]:
+                if each_pred_rela['duration'] == seg_duration:
+                    predict_relations.append(each_pred_rela)
+
             # compute average precision and recalls in detection setting
             det_prec, det_rec, det_scores = eval_detection_scores(
                 each_gt_relations, predict_relations, viou_threshold)
@@ -121,6 +135,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
                     prec_at_n[nre].append(tag_prec[cut_off - 1])
                 else:
                     prec_at_n[nre].append(0.)
+
     # calculate mean ap for detection
     mean_ap = np.mean(list(video_ap.values()))
     # calculate recall for detection
