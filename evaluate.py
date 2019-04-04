@@ -121,23 +121,3 @@ if __name__ == '__main__':
 
         # modify the split ['train', 'test']
         evaluate_relation(dataset, 'test', pred['results'], segment=short)
-
-    # Loading prediction from baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_relation_prediction.json
-    # Number of videos in prediction: 200
-    # Computing average precision AP over groundtruth(200) videos...
-    # This result of evaluation is based on: 200 groundtruth test set
-    # detection mean AP (used in challenge): 0.10778628213232916
-    # detection recall@50: 0.059772491455078125
-    # detection recall@100: 0.06907963007688522
-    # tagging precision@1: 0.38999998569488525
-    # tagging precision@5: 0.29600000381469727
-    # tagging precision@10: 0.2110000103712082
-    # -- zero-shot setting
-    # Computing average precision AP over groundtruth(73) videos...
-    # This result of evaluation is based on: 200 groundtruth test set
-    # detection mean AP (used in challenge): 0.03524517264600144
-    # detection recall@50: 0.025462962687015533
-    # detection recall@100: 0.025462962687015533
-    # tagging precision@1: 0.2465753424657534
-    # tagging precision@5: 0.22579908758810122
-    # tagging precision@10: 0.22442922414573904

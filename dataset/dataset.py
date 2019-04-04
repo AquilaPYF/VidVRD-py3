@@ -206,54 +206,6 @@ class Dataset(object):
             relation_insts.append(inst)
         return relation_insts
 
-    def get_relation_seg_insts(self, vid, seg_duration=None, no_traj=False):
-        if seg_duration is None:
-            seg_duration = [-1, -1]
-        relation_insts = self.get_relation_insts(vid, no_traj)
-        start, end = seg_duration
-        seg_insts = list()
-        # extract segment
-        for each_inst in relation_insts:
-            # each_inst_dur = each_inst['duration']
-            # for i in range(each_inst_dur / 30):
-            #     inst = dict()
-            #     for each_ins_key in ['triplet', 'subject_tid', 'object_tid', ]
-            #     inst['triplet'] = each_inst['triplet']
-            #     inst['subject_tid'] = anno_inst['subject_tid']
-            #     inst['object_tid'] = anno_inst['object_tid']
-            #     inst['duration'] = (anno_inst['begin_fid'], anno_inst['end_fid'])
-            #     if not no_traj:
-            #         inst['sub_traj'] = [bboxes[anno_inst['subject_tid']] for bboxes in
-            #                             trajs[inst['duration'][0]: inst['duration'][1]]]
-            #         inst['obj_traj'] = [bboxes[anno_inst['object_tid']] for bboxes in
-            #                             trajs[inst['duration'][0]: inst['duration'][1]]]
-            #     relation_insts.append(inst)
-
-            assert end >= start
-            assert 0 <= end <= self.get_anno(vid)['frame_count'] \
-                   and 0 <= start <= self.get_anno(vid)['frame_count']
-
-            # Based on statistics, segments are same 30 frames, all of ins are >= 30
-
-            if start <= each_inst_dur[0] and end >= each_inst_dur[1]:  # seg_s <= ins_s, ins_e <= seg_e
-                seg_insts.append(each_inst)
-            if start <= each_inst_dur[0] and end < each_inst_dur[1]:  # seg_s <= ins_s, seg_e <= ins_e
-                each_inst['duration'][1] = end
-                each_inst['sub_traj'] = each_inst['sub_traj'][: end - each_inst_dur[0]]
-                each_inst['obj_traj'] = each_inst['obj_traj'][: end - each_inst_dur[0]]
-                seg_insts.append(each_inst)
-            if start > each_inst_dur[0] and end >= each_inst_dur[1]:  # ins_s <= seg_s, ins_e <= seg_e
-                each_inst['duration'][0] = start
-                each_inst['sub_traj'] = each_inst['sub_traj'][start - each_inst_dur[0]:]
-                each_inst['obj_traj'] = each_inst['obj_traj'][start - each_inst_dur[0]:]
-                seg_insts.append(each_inst)
-            if start > each_inst_dur[0] and end < each_inst_dur[1]:  # ins_s <= seg_s, seg_e <= ins_e
-                each_inst['duration'] = seg_duration
-                each_inst['sub_traj'] = each_inst['sub_traj'][start - each_inst_dur[0]: end - each_inst_dur[0]]
-                each_inst['obj_traj'] = each_inst['obj_traj'][start - each_inst_dur[0]: end - each_inst_dur[0]]
-                seg_insts.append(each_inst)
-        return seg_insts
-
 
 class DatasetV1(Dataset):
     """

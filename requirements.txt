@@ -6,3 +6,4 @@ dlib
 numpy
 h5py
 opencv-python
+matplotlib
