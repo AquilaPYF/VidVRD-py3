@@ -102,7 +102,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
     print('Computing average precision AP over {}({}) videos...'.format('prediction', len(prediction)))
     print('This evaluation is based segments, traversal on predictions...')
 
-    video_ap = dict()
+    seg_ap = list()
     tot_scores = defaultdict(list)
     tot_tp = defaultdict(list)
     prec_at_n = defaultdict(list)
@@ -121,7 +121,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
             # compute average precision and recalls in detection setting
             det_prec, det_rec, det_scores = eval_detection_scores(
                 each_gt_relations, predict_relations, viou_threshold)
-            video_ap[vid] = voc_ap(det_rec, det_prec)
+            seg_ap.append(voc_ap(det_rec, det_prec))
             tp = np.isfinite(det_scores)
             for nre in det_nreturns:
                 cut_off = min(nre, det_scores.size)
@@ -137,7 +137,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
                     prec_at_n[nre].append(0.)
 
     # calculate mean ap for detection
-    mean_ap = np.mean(list(video_ap.values()))
+    mean_ap = np.mean(seg_ap)
     # calculate recall for detection
     rec_at_n = dict()
     for nre in det_nreturns:
