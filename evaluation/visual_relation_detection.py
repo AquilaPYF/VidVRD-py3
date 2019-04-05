@@ -106,13 +106,21 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
     tot_scores = defaultdict(list)
     tot_tp = defaultdict(list)
     prec_at_n = defaultdict(list)
+    gt_segs = dict()
     tot_gt_relations = 0
     for vid, gt_relations in groundtruth.items():
+
         for each_gt_relations in separate_vid_2_seg(gt_relations):
+
             if len(each_gt_relations) == 0:
                 continue
+
             tot_gt_relations += len(each_gt_relations)
             seg_duration = each_gt_relations[0]['duration']
+
+            gt_seg_sign = '{}-{:04d}-{:04d}'.format(vid, seg_duration[0], seg_duration[1])
+            gt_segs[gt_seg_sign] = each_gt_relations
+
             predict_relations = []
             for each_pred_rela in prediction[vid]:
                 if each_pred_rela['duration'] == seg_duration:
@@ -153,6 +161,10 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
     for nre in tag_nreturns:
         mprec_at_n[nre] = np.mean(prec_at_n[nre])
 
+    print(len(gt_segs))
+    with open('gt_segs1.json', 'w+') as out_f:
+        out_f.write(json.dumps(gt_segs))
+
     # print scores
     print('detection mean AP (used in challenge): {}'.format(mean_ap))
     print('detection recall@50: {}'.format(rec_at_n[50]))
@@ -160,6 +172,7 @@ def evaluate_segs(groundtruth, prediction, viou_threshold=0.5,
     print('tagging precision@1: {}'.format(mprec_at_n[1]))
     print('tagging precision@5: {}'.format(mprec_at_n[5]))
     print('tagging precision@10: {}'.format(mprec_at_n[10]))
+
     return mean_ap, rec_at_n, mprec_at_n
 
 

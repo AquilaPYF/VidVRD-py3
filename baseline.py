@@ -5,6 +5,8 @@ from tqdm import tqdm
 
 from baseline import segment_video, get_model_path
 from baseline import trajectory, feature, model, association
+from baseline import segment_video, get_model_path, get_segment_signature
+from evaluation import eval_visual_relation
 from dataset import VidVRD
 
 # could modify these paths
@@ -80,6 +82,90 @@ def load_relation_feature():
         segs = segment_video(0, anno['frame_count'])
         for fstart, fend in segs:
             extractor.extract_feature(dataset, vid, fstart, fend, verbose=True)
+
+
+def eval_short_term_relation():
+    """
+    Evaluate short-term relation prediction
+    """
+    anno_rpath = 'baseline/vidvrd-dataset'
+    video_rpath = 'baseline/vidvrd-dataset/videos'
+    splits = ['train', 'test']
+    st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
+
+    dataset = VidVRD(anno_rpath=anno_rpath,
+                     video_rpath=video_rpath,
+                     splits=splits)
+
+    with open(os.path.join(get_model_path(), 'baseline_setting.json'), 'r') as fin:
+        param = json.load(fin)
+
+    res_path = st_prediction
+    if os.path.exists(res_path):
+        with open(res_path, 'r') as fin:
+            short_term_relations = json.load(fin)
+    else:
+        short_term_relations = model.predict(dataset, param)
+        with open(res_path, 'w') as fout:
+            json.dump(short_term_relations, fout)
+
+    short_term_gt = dict()
+    short_term_pred = dict()
+    video_indices = dataset.get_index(split='test')
+    for vid in video_indices:
+        anno = dataset.get_anno(vid)
+        segs = segment_video(0, anno['frame_count'])
+        video_gts = dataset.get_relation_insts(vid)
+
+        video_preds = short_term_relations[vid]
+        for fstart, fend in segs:
+            vsig = get_segment_signature(vid, fstart, fend)
+
+            segment_gts = []
+            for r in video_gts:
+                s = max(r['duration'][0], fstart)
+                e = min(r['duration'][1], fend)
+                if s < e:
+                    sub_trac = r['sub_traj'][s - r['duration'][0]: e - r['duration'][0]]
+                    obj_trac = r['obj_traj'][s - r['duration'][0]: e - r['duration'][0]]
+                    segment_gts.append({
+                        "triplet": r['triplet'],
+                        "subject_tid": r['subject_tid'],
+                        "object_tid": r['object_tid'],
+                        "duration": [s, e],
+                        "sub_traj": sub_trac,
+                        "obj_traj": obj_trac
+                    })
+            short_term_gt[vsig] = segment_gts
+
+            segment_preds = []
+            for r in video_preds:
+                if fstart <= r['duration'][0] and r['duration'][1] <= fend:
+                    s = max(r['duration'][0], fstart)
+                    e = min(r['duration'][1], fend)
+                    sub_trac = r['sub_traj'][s - r['duration'][0]: e - r['duration'][0]]
+                    obj_trac = r['obj_traj'][s - r['duration'][0]: e - r['duration'][0]]
+                    segment_preds.append({
+                        "triplet": r['triplet'],
+                        "score": r['score'],
+                        "duration": [s, e],
+                        "sub_traj": sub_trac,
+                        "obj_traj": obj_trac
+                    })
+            short_term_pred[vsig] = segment_preds
+
+    for each_vsig in short_term_gt.keys():
+        if each_vsig not in short_term_pred.keys():
+            short_term_pred[each_vsig] = []
+
+    mean_ap, rec_at_n, mprec_at_n = eval_visual_relation(short_term_gt, short_term_pred)
+
+    print('detection mean AP (used in challenge): {}'.format(mean_ap))
+    print('detection recall@50: {}'.format(rec_at_n[50]))
+    print('detection recall@100: {}'.format(rec_at_n[100]))
+    print('tagging precision@1: {}'.format(mprec_at_n[1]))
+    print('tagging precision@5: {}'.format(mprec_at_n[5]))
+    print('tagging precision@10: {}'.format(mprec_at_n[10]))
 
 
 def train():
@@ -168,4 +254,5 @@ if __name__ == '__main__':
     # could run directly on Pycharm:
     # train()
 
-    detect()
+    # detect()
+    eval_short_term_relation()
