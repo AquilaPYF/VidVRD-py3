@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 
 from baseline.trajectory import Trajectory
@@ -40,3 +41,88 @@ def greedy_relational_association(short_term_relations, truncate_per_segment=100
         last_modify_rel_list = cur_modify_rel_list
 
     return [r.serialize() for r in video_relation_list]
+
+
+def origin_mht_relational_association(short_term_relations, truncate_per_segment=100):
+    """
+    This is not the very official MHT framework, which mainly is 4 frame-level.
+    This func is to associating short-term-relations relational.
+    ECCV 2018 update this original MHT 2 RNNs-Gating Network.
+    :param short_term_relations:
+    :param truncate_per_segment:
+    :return:
+    """
+    # Step 0. construct & update track tree
+    pstart_relations = defaultdict(list)
+    for r in short_term_relations:
+        pstart_relations[r['duration'][0]].append(r)
+
+    print(len(short_term_relations))
+    print(len(pstart_relations))
+
+    # Step 1. Gating
+
+    # Step 2. Track Scoring
+    # Step 3. Global Hypothesis Formation
+    # Step 4. Track Tree Pruning
+
+
+def gating(st_track, dth):
+    """
+    Where the next observation of the track is expected to appear.
+    :param st_track: track 2 b predicted
+    :param dth: distance threshold
+    :return: a gating area where the next observation of the track is expected 2 appear.
+    """
+
+
+def track_score(st_track, proposal):
+    """
+    Scoring the proposal tracklet can b associate 2 st_track possibility
+    :param st_track: exist track (traj)
+    :param proposal: tracklet 2 b connected
+    :return: score
+    """
+
+
+def global_hypo(track_trees):
+    """
+
+    :param track_trees: a set of trees containing all traj hypotheses 4 all targets
+    :return:
+    """
+
+
+def pruning_track_tree(track_tree):
+    """
+    Track Tree Pruning
+    :param track_tree:
+    :return:
+    """
+
+
+def generate_results(track_trees):
+    """
+    Generate traj results finally.
+    :param track_trees:
+    :return: trajs
+    """
+
+
+if __name__ == '__main__':
+
+    rpath = '/home/daivd/PycharmProjects/VidVRD-py3/'
+
+    short_term_relations_path = rpath + 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
+
+    # with open(short_term_relations_path, 'r') as st_rela_in:
+    #     short_term_relations = json.load(st_rela_in)
+
+    # result = greedy_relational_association(short_term_relations['ILSVRC2015_train_00010001'])
+
+    with open('test.json', 'r') as test_st_rela_f:
+        test_st_rela = json.load(test_st_rela_f)
+
+    result = origin_mht_relational_association(test_st_rela)
+
+    # print(result)

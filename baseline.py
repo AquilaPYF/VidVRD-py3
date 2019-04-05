@@ -92,6 +92,9 @@ def eval_short_term_relation():
     video_rpath = 'baseline/vidvrd-dataset/videos'
     splits = ['train', 'test']
     st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
+    test_st_pred = '/home/daivd/Downloads/pad_result_24000_test_predicate_-1_pair_nms_0.4_rpn_nms_0.7_0.255_union.json'
+
+    res_path = test_st_pred
 
     dataset = VidVRD(anno_rpath=anno_rpath,
                      video_rpath=video_rpath,
@@ -100,7 +103,6 @@ def eval_short_term_relation():
     with open(os.path.join(get_model_path(), 'baseline_setting.json'), 'r') as fin:
         param = json.load(fin)
 
-    res_path = st_prediction
     if os.path.exists(res_path):
         with open(res_path, 'r') as fin:
             short_term_relations = json.load(fin)
@@ -117,7 +119,11 @@ def eval_short_term_relation():
         segs = segment_video(0, anno['frame_count'])
         video_gts = dataset.get_relation_insts(vid)
 
-        video_preds = short_term_relations[vid]
+        if 'results' in short_term_relations.keys():
+            video_preds = short_term_relations['results'][vid]
+        else:
+            video_preds = short_term_relations[vid]
+
         for fstart, fend in segs:
             vsig = get_segment_signature(vid, fstart, fend)
 
