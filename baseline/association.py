@@ -42,6 +42,7 @@ def greedy_relational_association(short_term_relations, truncate_per_segment=100
 
     return [r.serialize() for r in video_relation_list]
 
+from baseline.track_tree import TrackTree, TreeNode
 
 def origin_mht_relational_association(short_term_relations, truncate_per_segment=100):
     """
@@ -57,8 +58,45 @@ def origin_mht_relational_association(short_term_relations, truncate_per_segment
     for r in short_term_relations:
         pstart_relations[r['duration'][0]].append(r)
 
-    print(len(short_term_relations))
-    print(len(pstart_relations))
+    targets_trees = dict()
+    targets_labels = set()
+    for pstart in sorted(pstart_relations.keys()):
+        sorted_relations = sorted(pstart_relations[pstart], key=lambda r: r['score'], reverse=True)
+        sorted_relations = sorted_relations[:truncate_per_segment]
+
+        for each_rela in sorted_relations:
+            subj, pred_rela, obj = each_rela['triplet']
+            for target in [subj, obj]:
+                if target in targets_labels:
+                    # get all of same label trees
+                    target_tree_list = []
+                    current_num = 0
+                    for each_node in targets_trees.keys():
+                        label, id = each_node.split('#')
+                        if target == label:
+                            current_num = max(current_num, id)
+                            target_tree_list.append(each_node)
+                    # figure out whether update the tree or create a new one
+                    update_nodes = []
+                    # generate update nodes ...
+
+                    if len(update_nodes) > 0:
+                        # update trees
+                        for each_update_node in update_nodes:
+                            # update tracklet
+                            pass
+                    else:
+                        # create a new tree
+                        tree_name = target + '#' + str(current_num + 1)
+
+
+                else:
+                    # create a new tree
+                    targets_labels.add(target)
+                    tree_name = target + '#0'
+
+
+
 
     # Step 1. Gating
 
@@ -110,7 +148,6 @@ def generate_results(track_trees):
 
 
 if __name__ == '__main__':
-
     rpath = '/home/daivd/PycharmProjects/VidVRD-py3/'
 
     short_term_relations_path = rpath + 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'

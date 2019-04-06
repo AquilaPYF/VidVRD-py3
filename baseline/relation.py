@@ -83,6 +83,9 @@ class VideoRelation(object):
         o_iou = _traj_iou_over_common_frames(self.otraj, otraj)
         return s_iou >= iou_thr and o_iou >= iou_thr
 
+    def single_overlap(self, traj1, traj2, iou_thr=0.5):
+        return _traj_iou_over_common_frames(traj1, traj2) >= iou_thr
+
     def extend(self, straj, otraj, conf):
         self.straj = _merge_trajs(self.straj, straj)
         self.otraj = _merge_trajs(self.otraj, otraj)
