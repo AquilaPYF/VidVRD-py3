@@ -1,5 +1,6 @@
 import networkx as nx
 from pprint import pprint as pt
+from baseline.trajectory import Trajectory
 import matplotlib.pyplot as plt
 
 
@@ -7,9 +8,10 @@ class TreeNode(object):
     def __init__(self, name, score, tracklet, duration):
         self.name = name
         self.score = score
-        self.id = name + '_{}_{}_{}'.format(duration[0], duration[1], score)
+        self.id = '{}_{}_{}'.format(duration[0], duration[1], score)
         self.tracklet = tracklet
         self.duration = duration
+        self.duration_length = duration[1] - duration[0]
         self.children = set()
 
     def __repr__(self):
@@ -34,6 +36,7 @@ class TrackTree(object):
         if tracklet is None:
             tracklet = [0, 0, 0, 0]
         self.count = 0
+        self.tree_name = tree_root_name
         self.tree = TreeNode(tree_root_name, score=0., tracklet=[0, 0, 0, 0], duration=[0, 0])
         self.id = self.tree.id
         self.all_nodes = [self.tree]
@@ -44,6 +47,7 @@ class TrackTree(object):
 
     def add(self, node, parent=None, trackal=True):
         if not trackal:
+
             self.if_node_exist = False
             self.if_node_exist_recursion(
                 self.tree, node, search=False, if_del=False)
@@ -183,10 +187,22 @@ class TrackTree(object):
                 # print('*' * 30)
                 return False
         if search_type == 'name':
-            for each_node in self.all_nodes:
+            for each_node in set(self.all_nodes):
                 if node.name == each_node.name:
                     return True
             return False
+
+    def get_node(self, node, start=True):
+        if node in self.all_nodes:
+            return node
+        if node.duration_length == 30:
+            node, node_tail = self.separate_node(node)
+            if not start:
+                node = node_tail
+        for each_node in set(self.all_nodes):
+            if each_node.id == node.id:
+                return each_node
+        return None
 
     def get_same_duration_nodes(self, duration):
         same_level_nodes_list = []
@@ -254,30 +270,84 @@ class TrackTree(object):
         nx.draw_networkx(G, with_labels=True, font_size=10, node_size=5)
         plt.show()
 
-    def get_all_path(self, node=None):
-        if node is None:
-            node = self.tree
-        if len(node.children) == 0:
+    def get_path(self, start_node=None):
+        if start_node is None:
+            start_node = self.tree
+        else:
+            # print(self.get_node(start_node))
+            start_node = self.get_node(start_node)
+
+        if len(start_node.children) == 0:
             return [[]]
 
         paths = []
-        for each_child in node.children:
-            for each_child_path in self.get_all_path(each_child):
+        for each_child in start_node.children:
+            for each_child_path in self.get_path(each_child):
                 each_path = [each_child] + each_child_path
                 paths.append(each_path)
-
         return paths
+
+    def get_path_of_2_node(self, start_node=None, end_node=None):
+        if start_node is None:
+            start_node = self.tree
+        if end_node is None:
+            return self.get_path(start_node)
+        start_node = self.get_node(start_node)
+        end_node = self.get_node(end_node, False)
+        result_paths = []
+        for each_path in self.get_path(start_node):
+            each_path.insert(0, start_node)
+            start_idx = -1
+            end_idx = -1
+            for idx, each_node in enumerate(each_path):
+                if each_node.id == start_node.id:
+                    start_idx = idx
+                if each_node.id == end_node.id:
+                    end_idx = idx
+            if start_idx != -1 and end_idx != -1:
+                result_paths.append(each_path[start_idx:end_idx + 1])
+        return result_paths
 
     def get_path_score(self, path):
         path_score = 0.
         for each_node in path:
             path_score += each_node.score
-        return path_score
+        return path_score / len(path)
 
-    def get_all_nodes(self):
+    def get_all_nodes(self, property=None):
+        result_list = []
         all_nodes = self.all_nodes
         all_nodes.sort(key=lambda x: x.duration[0])
-        return set(all_nodes)
+        if property is None:
+            result_list = all_nodes
+        if property == 'id':
+            node_ids = set()
+            for each_node in all_nodes:
+                node_ids.add(each_node.id)
+            result_list = list(node_ids)
+        return result_list
+
+    def generate_traj(self, start_node=None, end_node=None):
+        trajs = []
+        for each_path in self.get_path_of_2_node(start_node, end_node):
+            each_score = self.get_path_score(each_path)
+            # if start_node is None:
+            #     each_path = each_path[1:]
+            # print(each_path)
+            bboxs = []
+            pstart = 9999
+            pend = 0
+            for each_node in each_path:
+                bboxs.extend(each_node.tracklet)
+                pstart = min(each_node.duration[0], pstart)
+                pend = max(each_node.duration[1], pend)
+            # print(each_path, each_score, pstart, pend)
+            if len(each_path) == 1:
+                trajs.append(Trajectory(pstart, pend, bboxs, score=each_score))
+            else:
+                trajs.append(Trajectory(pstart, pend, bboxs, score=each_score))
+        trajs.sort(key=lambda t: t.score, reverse=True)
+        return trajs
 
     def to_graph_recursion(self, tree, G):
         """
@@ -350,9 +420,8 @@ if __name__ == '__main__':
     #     print(each.id, each.children)
     # T.show_tree()
 
-    # print(T.tree)
-    for each_path in T.get_all_path():
-        for each_node in each_path:
-            print(each_node.id, end='->')
-        print(T.get_path_score(each_path), end='')
-        print()
+    # for each_path in T.get_path_of_2_node(end_node=B):
+    #     print(each_path)
+
+    for each_traj in T.generate_traj(end_node=D):
+        print(each_traj)

@@ -19,7 +19,6 @@ need_2_re4mat = False
 
 # Put u short-term-predication json file 2
 raw_result_json_file = 'short-term-predication.json'
-# raw_result_json_file = 'result.json'    # U own json file name, could modify
 
 
 stp_results_root_path = os.path.join(anno_rpath, 'vidvrd-baseline-output')
@@ -211,7 +210,6 @@ def detect(re_detect=True):
         #     pickle.dump(short_term_relations, stp_pkl_out_f, protocol=pickle.HIGHEST_PROTOCOL)
         # print("Successfully save short-term predication to: " + short_term_predication_path[:-5] + '.pkl')
 
-        exit(0)
         with open(short_term_predication_path, 'w+') as stp_out_f:
             stp_out_f.write(json.dumps(short_term_relations))
         print("Successfully save short-term predication to: " + short_term_predication_path)
@@ -227,11 +225,11 @@ def detect(re_detect=True):
     print('greedy relational association ...')
     video_relations = dict()
     for vid in tqdm(short_term_relations.keys()):
-        res = association.greedy_relational_association(short_term_relations[vid], param['seg_topk'])
+        res = association.origin_mht_relational_association(short_term_relations[vid], param['seg_topk'])
         res = sorted(res, key=lambda r: r['score'], reverse=True)[:param['video_topk']]
         video_relations[vid] = res
     # save detection result
-    with open(os.path.join(get_model_path(), 'baseline_relation_prediction.json'), 'w') as fout:
+    with open(os.path.join(get_model_path(), 'my_test_relation_prediction.json'), 'w') as fout:
         output = {
             'version': 'VERSION 1.0',
             'results': video_relations
@@ -260,5 +258,5 @@ if __name__ == '__main__':
     # could run directly on Pycharm:
     # train()
 
-    # detect()
-    eval_short_term_relation()
+    detect(False)
+    # eval_short_term_relation()

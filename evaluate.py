@@ -95,7 +95,7 @@ if __name__ == '__main__':
     prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_relation_prediction.json'
     st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
 
-    short = True
+    short = False
 
     dataset = VidVRD(anno_rpath=anno_rpath,
                      video_rpath=video_rpath,

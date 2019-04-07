@@ -16,6 +16,7 @@ class Trajectory:
         """
         bbox: drectangle
         """
+        # print(pstart, pend, len(rois))
         assert len(rois) == pend - pstart
         self.pstart = pstart
         self.pend = pend
@@ -26,6 +27,9 @@ class Trajectory:
         # video signature
         self.vsig = vsig
         self.gt_trackid = gt_trackid
+
+    def __repr__(self):
+        return '{}_{}_{}'.format(self.pstart, self.pend, len(self.rois))
 
     def __lt__(self, other):
         assert self.score is not None
