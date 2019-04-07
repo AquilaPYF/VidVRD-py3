@@ -50,7 +50,7 @@ def greedy_relational_association(short_term_relations, truncate_per_segment=100
     return [r.serialize() for r in video_relation_list]
 
 
-def origin_mht_relational_association(short_term_relations, truncate_per_segment=3, top_tree=1):
+def origin_mht_relational_association(short_term_relations, truncate_per_segment=3, top_tree=3):
     """
     This is not the very official MHT framework, which mainly is 4 frame-level.
     This func is to associating short-term-relations relational.
@@ -74,7 +74,7 @@ def origin_mht_relational_association(short_term_relations, truncate_per_segment
         pstart_relations[r['duration'][0]].append(r)
 
     targets_trees = dict()
-    # triplet_with_id = list()
+    triplet_with_id = list()
 
     for pstart in sorted(pstart_relations.keys()):
         sorted_relations = sorted(pstart_relations[pstart], key=lambda r: r['score'], reverse=True)
