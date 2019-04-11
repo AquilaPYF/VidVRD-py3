@@ -112,6 +112,7 @@ def origin_mht_relational_association(short_term_relations, truncate_per_segment
                                 score=score,
                                 tracklet=tracklet
                             )
+                            each_update_tree.pruning_track_tree()
                             each_update_tree.add(update_node, trackal=True)
 
                     else:
@@ -257,39 +258,42 @@ def traj_iou_over_common_frames(traj_1, traj_2):
     return iou[0, 0]
 
 
-def gating(st_traj, dth):
+def gating(st_traj, distance_threshold):
     """
-    Where the next observation of the track is expected to appear.
+    Where the next observation of the track is expected to appear. Use mahalanobis distance.
     :param st_track: track 2 b predicted
-    :param dth: distance threshold
+    :param distance_threshold: distance threshold
     :return: a gating area where the next observation of the track is expected 2 appear.
     """
-    return st_traj.predict
+    from baseline.mahalanobis import tf_maha
+    location = st_traj[-1]
+    predict = st_traj.predict
+    mahalanobis_distance = tf_maha(location, predict)
+    if mahalanobis_distance  <= distance_threshold:
+        return True
+    return False
 
 
-def track_score(st_track, proposal):
+def track_score(weight_motion, score_motion, weight_appearance, score_appearance):
     """
-    Scoring the proposal tracklet can b associate 2 st_track possibility
-    :param st_track: exist track (traj)
-    :param proposal: tracklet 2 b connected
-    :return: score
+    Scoring the proposal tracklet can b associate 2 st_track possibility.
+    Score = weight_motion * score_motion + weight_appearance * score_appearance
+    :param weight_motion:
+    :param score_motion:
+    :param weight_appearance:
+    :param score_appearance:
+    :return:
     """
+    return weight_motion * score_motion + weight_appearance * score_appearance
 
 
 def global_hypo(track_trees):
     """
+    Determine the most likely combination of object tracks at frame k.
+    NP-hard, Maximum Weighted Independent Set Problem (MWIS)
     :param track_trees: a set of trees containing all traj hypotheses 4 all targets
     :return:
     """
-
-
-def pruning_track_tree(track_tree):
-    """
-    Track Tree Pruning
-    :param track_tree:
-    :return:
-    """
-
 
 
 def generate_results(track_trees):

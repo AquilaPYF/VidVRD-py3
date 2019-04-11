@@ -22,6 +22,7 @@ Vm = np.matrix(V)
 
 x = data[0]
 y = data[1]
+print(x, y)
 
 
 def maha(x, y, V):
@@ -31,11 +32,11 @@ def maha(x, y, V):
 def tf_maha(x, y, V):
     num_var = len(x)
     with tf.Session() as sess:
-        xx = tf.placeholder(tf.types.float32, [num_var])
-        yy = tf.placeholder(tf.types.float32, [num_var])
-        vv = tf.placeholder(tf.types.float32, [num_var, num_var])
+        xx = tf.placeholder(tf.float32, [num_var])
+        yy = tf.placeholder(tf.float32, [num_var])
+        vv = tf.placeholder(tf.float32, [num_var, num_var])
         vivi = tf.matrix_inverse(vv)
-        diff = tf.sub(xx, yy)
+        diff = tf.subtract(xx, yy)
         dt = tf.reshape(tf.transpose(diff), [1, len(x)])
         ds = tf.reshape(diff, [len(x), 1])
         M1 = tf.matmul(dt, vivi)
@@ -47,7 +48,7 @@ def tf_maha(x, y, V):
     return ans
 
 
-tf_maha(x, y, Vm)
+print(tf_maha(x, y, Vm))
 
 
 def cov(data):
@@ -72,7 +73,7 @@ def tf_cov(data):
     """
     num_obs, num_vars = data.shape
     with tf.Session() as sess:
-        dd = tf.placeholder(tf.types.float64, [num_obs, num_vars])
+        dd = tf.placeholder(tf.float64, [num_obs, num_vars])
         means = tf.reduce_mean(dd, reduction_indices=[0])
         diffs = tf.sub(dd, means)
         cov = (1 / float(num_obs - 1)) * tf.matmul(tf.transpose(diffs), diffs)
@@ -86,7 +87,7 @@ def tf_maha(data):
     """
     num_obs, num_vars = data.shape
     with tf.Session() as sess:
-        dd = tf.placeholder(tf.types.float64, [num_obs, num_vars])
+        dd = tf.placeholder(tf.float64, [num_obs, num_vars])
         means = tf.reduce_mean(dd, reduction_indices=[0])
         diffs = tf.sub(dd, means)
         cov = (1 / float(num_obs - 1)) * tf.matmul(tf.transpose(diffs), diffs)
@@ -99,3 +100,19 @@ def tf_maha(data):
         output = tf.sqrt(z)
         ans = sess.run([output], feed_dict={dd: data})
     return ans
+
+
+def overlap(bboxes1, bboxes2):
+    assert len(bboxes1) == len(bboxes2)
+    overlap_list = []
+    for i in range(len(bboxes1)):
+        x1min, y1min, x1max, y1max = bboxes1[i]
+        x2min, y2min, x2max, y2max = bboxes2[i]
+        if x1max <= x2min or x2max <= x1min or y1max <= y2max or y2max <= y1min:
+            overlap_list.append(0.)
+        else:
+            area1 = (x1max - x1min) * (y1max - y1min)
+            area2 = (x2max - x2min) * (y2max - y2min)
+            overlap = (min(x1max, x2max) - max(x1min, x2min)) * (min(y1max, y2max) - max(y1min, y2min))
+            overlap_list.append(overlap / (area1 + area2 - overlap))
+    return np.mean(overlap_list)

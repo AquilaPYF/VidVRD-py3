@@ -13,6 +13,7 @@ class TreeNode(object):
         self.duration = duration
         self.duration_length = duration[1] - duration[0]
         self.children = set()
+        self.parents = set()
 
     def __repr__(self):
         return self.id
@@ -115,6 +116,44 @@ class TrackTree(object):
                 duration=[ns + 15, ne]
             )
             return firstNode, secondNode
+
+    def pruning_track_tree(self, n_scan=2, threshold=2):
+        """
+        Track Tree Pruning
+        1. Standard N-scan pruning approach. Trace back to the node at frame k-N
+        2. The number of branches in a track tree is more than a threshold Bth, then prune to only retain top Bth branches.
+
+        :param self:
+        :param n_scan: N-scan window size
+        :param threshold: the max branches
+        :return:
+        """
+        for i in range(n_scan):
+            for each_leaf in self.get_all_leaves():
+                paths = self.get_path_of_2_node(end_node=each_leaf)
+                paths.sort(key=lambda s: self.get_path_score(s), reverse=True)
+                self.save_paths(paths[:threshold])
+
+    def save_paths(self, paths):
+        self.all_nodes.clear()
+        for each_path in paths:
+            self.all_nodes.extend(each_path)
+
+
+    def get_all_leaves(self):
+        leaves = set()
+        for each_node in self.all_nodes:
+            if len(each_node.children) == 0:
+                leaves.add(each_node)
+        return leaves
+
+    def generate_parents(self, node=None):
+        if node is None:
+            # generate all of nodes
+            for each_node in self.all_nodes:
+                if len(each_node.children) != 0:
+                    for each_child in each_node.children:
+                        each_child.parents.add(each_node)
 
     def merge2nodes(self, node1, node2):
         self.if_node_exist_recursion(
@@ -285,6 +324,7 @@ class TrackTree(object):
             for each_child_path in self.get_path(each_child):
                 each_path = [each_child] + each_child_path
                 paths.append(each_path)
+        paths.sort(key=lambda i: self.get_path_score(i), reverse=True)
         return paths
 
     def get_path_of_2_node(self, start_node=None, end_node=None):
@@ -382,6 +422,7 @@ class TrackTree(object):
                 elif if_del is True:
                     if node in tree.children:
                         tree.children.remove(node)
+                        tree.all_nodes.remove(node)
                 break
             else:
                 self.if_node_exist_recursion(child, node, search, if_del)
@@ -419,9 +460,12 @@ if __name__ == '__main__':
     # for each in T.get_all_nodes():
     #     print(each.id, each.children)
     # T.show_tree()
+    T.generate_parents()
 
-    # for each_path in T.get_path_of_2_node(end_node=B):
-    #     print(each_path)
+    for each_path in T.get_path():
+        print(each_path, T.get_path_score(each_path))
 
-    for each_traj in T.generate_traj(end_node=D):
-        print(each_traj)
+    T.pruning_track_tree()
+    print('==================')
+    for each_path in T.get_path():
+        print(each_path, T.get_path_score(each_path))
