@@ -92,7 +92,7 @@ if __name__ == '__main__':
     anno_rpath = 'baseline/vidvrd-dataset'
     video_rpath = 'baseline/vidvrd-dataset/videos'
     splits = ['train', 'test']
-    prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_relation_prediction.json'
+    prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/my_test_relation_prediction.json'
     st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
 
     short = False

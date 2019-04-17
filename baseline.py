@@ -8,6 +8,7 @@ from baseline import trajectory, feature, model, association
 from baseline import segment_video, get_model_path, get_segment_signature
 from evaluation import eval_visual_relation
 from dataset import VidVRD
+from mht.mht import origin_mht_relational_association
 
 # could modify these paths
 anno_rpath = 'baseline/vidvrd-dataset'
@@ -222,14 +223,16 @@ def detect(re_detect=True):
         with open(short_term_predication_path, 'r') as stp_in_f:
             short_term_relations = json.load(stp_in_f)
 
-    print('greedy relational association ...')
+    # print('greedy relational association ...')
+    print('origin mht association...')
     video_relations = dict()
     for vid in tqdm(short_term_relations.keys()):
-        res = association.origin_mht_relational_association(short_term_relations[vid], param['seg_topk'])
+        # res = association.greedy_relational_association(short_term_relations[vid], param['seg_topk'])
+        res = origin_mht_relational_association(short_term_relations[vid], param['seg_topk'], top_tree=20)
         res = sorted(res, key=lambda r: r['score'], reverse=True)[:param['video_topk']]
         video_relations[vid] = res
     # save detection result
-    with open(os.path.join(get_model_path(), 'my_test_relation_prediction.json'), 'w') as fout:
+    with open(os.path.join(get_model_path(), 'my_test_relation_prediction.json'), 'w+') as fout:
         output = {
             'version': 'VERSION 1.0',
             'results': video_relations
