@@ -305,20 +305,12 @@ def generate_results(track_trees):
 
 
 if __name__ == '__main__':
-    # rpath = '/home/daivd/PycharmProjects/VidVRD-py3/'
-    #
-    # short_term_relations_path = rpath + 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
-
-    # with open(short_term_relations_path, 'r') as st_rela_in:
-    #     short_term_relations = json.load(st_rela_in)
-
-    # result = greedy_relational_association(short_term_relations['ILSVRC2015_train_00010001'])
 
     with open('test.json', 'r') as test_st_rela_f:
         test_st_rela = json.load(test_st_rela_f)
 
-    result = origin_mht_relational_association(test_st_rela)
-    # origin_mht_relational_association(test_st_rela)
+    result = greedy_relational_association(test_st_rela)
 
-    # print(len(result))
-    # print(result[0].keys())
+    print(len(result))
+    for each_res in result:
+        print(each_res)
