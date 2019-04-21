@@ -114,7 +114,6 @@ class FeatureExtractor(Process):
         vsig = get_segment_signature(vid, fstart, fend)
         path = get_feature_path('relation', vid)
         path = os.path.join(path, '{}-{}.h5'.format(vsig, 'relation'))
-        # i3d_feature_rpath = '/home/daivd/PycharmProjects/VidVRD-dataset/i3d_featurse'
         if os.path.exists(path):
             if dry_run:
                 return None, None, None, None
@@ -127,12 +126,6 @@ class FeatureExtractor(Process):
                     trackid = fin['trackid'][:]
                     # all possible pairs among N+M object trajectories
                     pairs = fin['pairs'][:]
-                    # relation feature for each pair (in same order)
-                    # i3d_feature_path = os.path.join(i3d_feature_rpath, vid, vid + '.npy')
-                    # i3d_feature = []
-                    # if os.path.exists(i3d_feature_path):
-                    #     i3d_feature = np.load(i3d_feature_path)
-
                     feats = fin['feats'][:]
                     # vIoU (traj_iou) for each pair (in same order)
                     iou = fin['iou'][:]

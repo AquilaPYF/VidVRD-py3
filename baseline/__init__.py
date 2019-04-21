@@ -2,7 +2,8 @@ import os
 
 # Several module level utility functions
 
-vidvrd_baseline_output_path = 'baseline/vidvrd-dataset/vidvrd-baseline-output'
+root_path = '/home/daivd/PycharmProjects/VidVRD-py3/'
+vidvrd_baseline_output_path = os.path.join(root_path, 'baseline/vidvrd-dataset/vidvrd-baseline-output')
 
 
 def get_segment_signature(vid, fstart, fend):

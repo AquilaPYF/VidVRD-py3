@@ -15,6 +15,7 @@ from keras.utils import np_utils
 from baseline.relation import VideoRelation
 from tqdm import tqdm
 from baseline.trajectory import object_trajectory_proposal
+from dataset.vidvrd import VidVRD
 
 from baseline import *
 
@@ -72,6 +73,7 @@ class DataGenerator(FeatureExtractor):
                 sub_id = dataset.get_object_id(sub_name)
                 pred_id = dataset.get_predicate_id(pred_name)
                 obj_id = dataset.get_object_id(obj_name)
+                # print(triplet, sub_id, pred_id, obj_id)
                 _train_triplet_id[(sub_id, pred_id, obj_id)] = i
 
             self.short_rel_insts = defaultdict(list)
@@ -129,7 +131,7 @@ class DataGenerator(FeatureExtractor):
             try:
                 i = next(self.ind_iter)
             except StopIteration as e:
-                return None
+                return e
             index = self.index[i]
             pairs, feats, iou, trackid = self.extract_feature(*index)
             test_inds = [ind for ind, (traj1, traj2) in enumerate(pairs)
@@ -297,3 +299,19 @@ def predict(dataset, param):
 
     pbar.close()
     return short_term_relations
+
+
+if __name__ == '__main__':
+    root_rpath = '/home/daivd/PycharmProjects/VidVRD-py3/'
+    anno_rpath = os.path.join(root_rpath, 'baseline/vidvrd-dataset')
+    video_rpath = os.path.join(root_rpath, 'baseline/vidvrd-dataset/videos')
+    baseline_setting_path = os.path.join(root_rpath,
+                                         'baseline/vidvrd-dataset/vidvrd-baseline-output/models/baseline_setting.json')
+    splits = ['train', 'test']
+    dataset = VidVRD(anno_rpath, video_rpath, splits)
+
+    with open(baseline_setting_path, 'r') as baseline_setting_in_f:
+        param = json.load(baseline_setting_in_f)
+    param['phase'] = 'train'
+
+    dataloader = DataGenerator(dataset, param)
