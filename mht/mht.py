@@ -16,12 +16,12 @@ so_id = dict()
 
 
 def origin_mht_relational_association(short_term_relations,
-                                      truncate_per_segment=100, top_tree=3, overlap=0.3, iou_thr=0.5):
+                                      truncate_per_segment=100, top_tree=10, overlap=0.3, iou_thr=0.3):
     """
     This is not the very official MHT framework, which mainly is 4 frame-level.
     This func is to associating short-term-relations relational.
-    :param overlap: overlap 4 obj id
-    :param iou_thr: iou for associate
+    :param overlap: overlap 4 obj id, higher, more
+    :param iou_thr: iou for associate, higher, less
     :param top_tree:
     :param short_term_relations:
     :param truncate_per_segment:
@@ -69,8 +69,12 @@ def origin_mht_relational_association(short_term_relations,
                     track_tree.add(new_tree_node, track_tree.tree)
                 else:
                     for each_path in track_tree.get_paths():
-                        if check_2_nodes(each_path[-1], new_tree_node, iou_thr):
-                            track_tree.add(new_tree_node, each_path[-1])
+                        if new_tree_node.st_predicate in [i[0] for i in get_path_predicate_score(each_path)]:
+                            if check_2_nodes(each_path[-1], new_tree_node, iou_thr):
+                                track_tree.add(new_tree_node, each_path[-1])
+                        else:
+                            if each_path[-1].duration[0] < new_tree_node.duration[0] < each_path[-1].duration[1] < new_tree_node.duration[1]:
+                                track_tree.add(new_tree_node, each_path[-1])
 
     # generate results
     video_relation_list = list()
@@ -78,6 +82,7 @@ def origin_mht_relational_association(short_term_relations,
         top_k_paths, top_k_scores = generate_results(each_tree, top_tree)
         for each_path in top_k_paths:
             video_relation_list.append(associate_path(each_path))
+
     return [r.serialize() for r in video_relation_list]
 
 
@@ -140,8 +145,7 @@ def generate_results(track_tree, top_k):
     return top_k_res, top_k_scores
 
 
-def associate_path(track_path):
-    result = None
+def get_path_predicate_score(track_path):
     preds = dict()
     for each_node in track_path:
         each_st_predicate = each_node.st_predicate
@@ -155,6 +159,13 @@ def associate_path(track_path):
         preds[each_pred] = np.mean(each_scores)
 
     preds_list = sorted(preds.items(), key=lambda item: item[1], reverse=True)
+    return preds_list
+
+
+def associate_path(track_path):
+    result = None
+
+    preds_list = get_path_predicate_score(track_path)
     for each_node in track_path:
         if each_node.duration != [0, 0]:
             sub, obj = each_node.so_labels

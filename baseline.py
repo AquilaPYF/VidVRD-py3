@@ -228,7 +228,7 @@ def detect(re_detect=True):
     video_relations = dict()
     for vid in tqdm(short_term_relations.keys()):
         # res = association.greedy_relational_association(short_term_relations[vid], param['seg_topk'])
-        res = origin_mht_relational_association(short_term_relations[vid], param['seg_topk'], top_tree=3)
+        res = origin_mht_relational_association(short_term_relations[vid], param['seg_topk'], top_tree=5)
         res = sorted(res, key=lambda r: r['score'], reverse=True)[:param['video_topk']]
         video_relations[vid] = res
     # save detection result
