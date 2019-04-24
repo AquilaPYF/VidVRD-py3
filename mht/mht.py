@@ -18,8 +18,8 @@ def origin_mht_relational_association(short_term_relations,
     """
     This is not the very official MHT framework, which mainly is 4 frame-level.
     This func is to associating short-term-relations relational.
-    :param overlap: overlap 4 obj id, higher, more
-    :param iou_thr: iou for associate, higher, less
+    :param overlap: overlap 4 obj id, higher, more obj, more trees
+    :param iou_thr: iou for associate, higher, less trees
     :param top_tree:
     :param short_term_relations:
     :param truncate_per_segment:
@@ -67,8 +67,6 @@ def origin_mht_relational_association(short_term_relations,
                     track_tree.add(new_tree_node, track_tree.tree)
                 else:
                     for each_path in track_tree.get_paths():
-                        if new_tree_node.st_predicate in [i[0] for i in get_path_predicate_score(each_path)]:
-                            iou_thr = 0.
                         if gating(each_path[-1], new_tree_node, iou_thr):
                                 track_tree.add(new_tree_node, each_path[-1])
 

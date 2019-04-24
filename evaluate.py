@@ -95,7 +95,7 @@ if __name__ == '__main__':
     splits = ['train', 'test']
     st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
 
-    test_result_name = 'mht_test_relation_prediction_v2.json'
+    test_result_name = 'mht_test_relation_prediction_v3.json'
     prediction = os.path.join('baseline/vidvrd-dataset/vidvrd-baseline-output/models', test_result_name)
 
     short = False

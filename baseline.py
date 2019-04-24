@@ -250,6 +250,6 @@ if __name__ == '__main__':
 
     # could run directly on Pycharm:
     # train()
-    save_path = 'mht_test_relation_prediction_v2.json'
+    save_path = 'mht_test_relation_prediction_v3.json'
     detect(False, save_path)
     # eval_short_term_relation()
