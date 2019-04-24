@@ -14,7 +14,7 @@ so_id = dict()
 
 
 def origin_mht_relational_association(short_term_relations,
-                                      truncate_per_segment=100, top_tree=10, overlap=0.3, iou_thr=0.3):
+                                      truncate_per_segment=100, top_tree=5, overlap=0.3, iou_thr=0.3):
     """
     This is not the very official MHT framework, which mainly is 4 frame-level.
     This func is to associating short-term-relations relational.
@@ -68,11 +68,8 @@ def origin_mht_relational_association(short_term_relations,
                 else:
                     for each_path in track_tree.get_paths():
                         if new_tree_node.st_predicate in [i[0] for i in get_path_predicate_score(each_path)]:
-                            if check_2_nodes(each_path[-1], new_tree_node, iou_thr):
-                                track_tree.add(new_tree_node, each_path[-1])
-                        else:
-                            if each_path[-1].duration[0] < new_tree_node.duration[0] < each_path[-1].duration[1] < \
-                                    new_tree_node.duration[1]:
+                            iou_thr = 0.
+                        if gating(each_path[-1], new_tree_node, iou_thr):
                                 track_tree.add(new_tree_node, each_path[-1])
 
     # generate results
@@ -81,7 +78,6 @@ def origin_mht_relational_association(short_term_relations,
         top_k_paths, top_k_scores = generate_results(each_tree, top_tree)
         for each_path in top_k_paths:
             video_relation_list.append(associate_path(each_path))
-
     return [r.serialize() for r in video_relation_list]
 
 
@@ -113,9 +109,6 @@ def track_score(track_path):
     Score = weight_motion * score_motion + weight_appearance * score_appearance
     :return:
     """
-    weight_motion, score_motion, weight_appearance, score_appearance = 0, 0, 0, 0
-    score = weight_motion * score_motion + weight_appearance * score_appearance
-
     path_score = 0.
     for each_node in track_path:
         path_score += each_node.score
@@ -181,7 +174,7 @@ def associate_path(track_path):
     return result
 
 
-def check_2_nodes(tree_tail, new_tree_node, iou_thr):
+def gating(tree_tail, new_tree_node, iou_thr):
     tail_start_f, tail_end_f = tree_tail.duration
     new_node_start_f, new_node_end_f = new_tree_node.duration
     if tail_start_f < new_node_start_f < tail_end_f < new_node_end_f:
@@ -200,8 +193,8 @@ def check_2_nodes(tree_tail, new_tree_node, iou_thr):
         obj_tail_traj = Trajectory(overlap_start, overlap_end, obj_tail_track, tree_tail.score)
         obj_new_traj = Trajectory(overlap_start, overlap_end, obj_new_track, new_tree_node.score)
 
-        return check_overlap(subj_tail_traj, subj_new_traj, iou_thr) and check_overlap(obj_tail_traj, obj_new_traj,
-                                                                                       iou_thr)
+        return check_overlap(subj_tail_traj, subj_new_traj, iou_thr) \
+            and check_overlap(obj_tail_traj, obj_new_traj, iou_thr)
     return False
 
 
@@ -217,9 +210,11 @@ if __name__ == '__main__':
 
     print(len(result))
     show_res_num = 50
+    res_length = dict()
     for each_res in result:
-        if show_res_num >= 0:
-            show_res_num -= 1
-            print(each_res)
+        each_res_length = each_res['duration'][1] - each_res['duration'][0]
+        if each_res_length in res_length.keys():
+            res_length[each_res_length] += 1
         else:
-            exit(0)
+            res_length[each_res_length] = 1
+    print(res_length)

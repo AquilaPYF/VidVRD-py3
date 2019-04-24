@@ -1,5 +1,6 @@
 import json
 import argparse
+import os
 
 from dataset import VidVRD, VidOR
 from evaluation import eval_video_object, eval_action, eval_visual_relation, eval_visual_relation_segs
@@ -92,8 +93,10 @@ if __name__ == '__main__':
     anno_rpath = 'baseline/vidvrd-dataset'
     video_rpath = 'baseline/vidvrd-dataset/videos'
     splits = ['train', 'test']
-    prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/models/my_test_relation_prediction.json'
     st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
+
+    test_result_name = 'mht_test_relation_prediction_v2.json'
+    prediction = os.path.join('baseline/vidvrd-dataset/vidvrd-baseline-output/models', test_result_name)
 
     short = False
 
