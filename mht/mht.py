@@ -71,7 +71,8 @@ def origin_mht_relational_association(short_term_relations,
                             if check_2_nodes(each_path[-1], new_tree_node, iou_thr):
                                 track_tree.add(new_tree_node, each_path[-1])
                         else:
-                            if each_path[-1].duration[0] < new_tree_node.duration[0] < each_path[-1].duration[1] < new_tree_node.duration[1]:
+                            if each_path[-1].duration[0] < new_tree_node.duration[0] < each_path[-1].duration[1] < \
+                                    new_tree_node.duration[1]:
                                 track_tree.add(new_tree_node, each_path[-1])
 
     # generate results
@@ -90,7 +91,7 @@ def get_obj_id(obj, obj_traj, overlap_threshold):
         obj_track_overlap = overlap_threshold
         max_id = -1
         for each_obj_id, each_obj_traj in so_id[obj].items():
-            each_overlap = traj_iou_over_common_frames(obj_traj, each_obj_traj)
+            each_overlap = _traj_iou_over_common_frames(obj_traj, each_obj_traj)
             max_id = max(max_id, each_obj_id)
             if each_overlap > obj_track_overlap >= overlap_threshold:
                 obj_track_overlap = each_overlap
@@ -99,7 +100,7 @@ def get_obj_id(obj, obj_traj, overlap_threshold):
             obj_id = max_id + 1
             so_id[obj][obj_id] = obj_traj
         else:
-            so_id[obj][obj_id] = merge_trajs(so_id[obj][obj_id], obj_traj)
+            so_id[obj][obj_id] = _merge_trajs(so_id[obj][obj_id], obj_traj)
     else:
         obj_id = 0
         so_id[obj] = {0: obj_traj}
@@ -178,6 +179,34 @@ def associate_path(track_path):
                 else:
                     result.extend(straj, otraj, conf_score + pred_score)
     return result
+
+
+def check_2_nodes(tree_tail, new_tree_node, iou_thr):
+    tail_start_f, tail_end_f = tree_tail.duration
+    new_node_start_f, new_node_end_f = new_tree_node.duration
+    if tail_start_f < new_node_start_f < tail_end_f < new_node_end_f:
+        overlap_start, overlap_end = new_node_start_f, tail_end_f
+        subj_tail_track = tree_tail.subj_tracklet[(overlap_start - tail_start_f):
+                                                  (overlap_end - tail_start_f)]
+        obj_tail_track = tree_tail.obj_tracklet[(overlap_start - tail_start_f):
+                                                (overlap_end - tail_start_f)]
+        subj_new_track = new_tree_node.subj_tracklet[(overlap_start - new_node_start_f):
+                                                     (overlap_end - new_node_start_f)]
+        obj_new_track = new_tree_node.obj_tracklet[(overlap_start - new_node_start_f):
+                                                   (overlap_end - new_node_start_f)]
+        # generate trajectory
+        subj_tail_traj = Trajectory(overlap_start, overlap_end, subj_tail_track, tree_tail.score)
+        subj_new_traj = Trajectory(overlap_start, overlap_end, subj_new_track, new_tree_node.score)
+        obj_tail_traj = Trajectory(overlap_start, overlap_end, obj_tail_track, tree_tail.score)
+        obj_new_traj = Trajectory(overlap_start, overlap_end, obj_new_track, new_tree_node.score)
+
+        return check_overlap(subj_tail_traj, subj_new_traj, iou_thr) and check_overlap(obj_tail_traj, obj_new_traj,
+                                                                                       iou_thr)
+    return False
+
+
+def check_overlap(traj1, traj2, iou_thr):
+    return _traj_iou_over_common_frames(traj1, traj2) >= iou_thr
 
 
 if __name__ == '__main__':
