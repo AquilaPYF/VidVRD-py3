@@ -205,21 +205,11 @@ def detect(re_detect=True):
 
     if re_detect:
         short_term_relations = model.predict(dataset, param)
-
-        # save short-term predication results
-        # with open(short_term_predication_path[:-5] + '.pkl', 'wb+') as stp_pkl_out_f:
-        #     pickle.dump(short_term_relations, stp_pkl_out_f, protocol=pickle.HIGHEST_PROTOCOL)
-        # print("Successfully save short-term predication to: " + short_term_predication_path[:-5] + '.pkl')
-
         with open(short_term_predication_path, 'w+') as stp_out_f:
             stp_out_f.write(json.dumps(short_term_relations))
         print("Successfully save short-term predication to: " + short_term_predication_path)
 
     else:
-        # load short_term_relations from save file
-        # with open(short_term_predication_path[:-5] + '.pkl', 'rb') as stp_pkl_in_f:
-        #     short_term_relations = pickle.load(stp_pkl_in_f)
-
         with open(short_term_predication_path, 'r') as stp_in_f:
             short_term_relations = json.load(stp_in_f)
 

@@ -2,11 +2,9 @@ import json
 from collections import defaultdict
 
 import numpy as np
-from scipy.spatial.distance import mahalanobis
 
-from mht.relation import VideoRelation
-from mht.track_utils import check_2_nodes, traj_iou_over_common_frames, merge_trajs
-from mht.trajectory import Trajectory
+from baseline.relation import VideoRelation, _traj_iou_over_common_frames, _merge_trajs
+from baseline.trajectory import Trajectory
 from mht.tree import TrackTree, TreeNode
 
 anno_rpath = 'baseline/vidvrd-dataset'
@@ -189,5 +187,10 @@ if __name__ == '__main__':
     result = origin_mht_relational_association(test_st_rela)
 
     print(len(result))
-    # for each_res in result:
-    #     print(each_res)
+    show_res_num = 50
+    for each_res in result:
+        if show_res_num >= 0:
+            show_res_num -= 1
+            print(each_res)
+        else:
+            exit(0)
