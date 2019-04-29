@@ -46,16 +46,16 @@ def load_object_trajectory_proposal():
         for duration in durations:
             segs = segment_video(*duration)
             for fstart, fend in segs:
-                trajs = trajectory.object_trajectory_proposal(dataset, vid, fstart, fend, gt=False, verbose=True)
-                trajs = trajectory.object_trajectory_proposal(dataset, vid, fstart, fend, gt=True, verbose=True)
+                trajs = trajectory.object_trajectory_proposal(vid, fstart, fend, gt=False, verbose=True)
+                trajs = trajectory.object_trajectory_proposal(vid, fstart, fend, gt=True, verbose=True)
 
     video_indices = dataset.get_index(split='test')
     for vid in video_indices:
         anno = dataset.get_anno(vid)
         segs = segment_video(0, anno['frame_count'])
         for fstart, fend in segs:
-            trajs = trajectory.object_trajectory_proposal(dataset, vid, fstart, fend, gt=False, verbose=True)
-            trajs = trajectory.object_trajectory_proposal(dataset, vid, fstart, fend, gt=True, verbose=True)
+            trajs = trajectory.object_trajectory_proposal(vid, fstart, fend, gt=False, verbose=True)
+            trajs = trajectory.object_trajectory_proposal(vid, fstart, fend, gt=True, verbose=True)
 
 
 def load_relation_feature():

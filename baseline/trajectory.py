@@ -29,7 +29,7 @@ class Trajectory:
         self.gt_trackid = gt_trackid
 
     def __repr__(self):
-        return '{}_{}_{}'.format(self.pstart, self.pend, len(self.rois))
+        return '{}_{}_{}'.format(self.category, self.pstart, self.pend)
 
     def __lt__(self, other):
         assert self.score is not None
@@ -178,13 +178,15 @@ def object_trajectory_proposal(vid, fstart, fend, gt=False, verbose=False):
     path = os.path.join(path, '{}-{}.json'.format(vsig, name))
     if os.path.exists(path):
         if verbose:
-            print('loading object {} proposal for video segment {}'.format(name, vsig))
+            pass
+            # print('loading object {} proposal for video segment {}'.format(name, vsig))
         with open(path, 'r') as fin:
             trajs = json.load(fin)
         trajs = [Trajectory(**traj) for traj in trajs]
     else:
         if verbose:
-            print('no object {} proposal for video segment {}'.format(name, vsig))
+            pass
+            # print('no object {} proposal for video segment {}'.format(name, vsig))
         trajs = []
     return trajs
 
