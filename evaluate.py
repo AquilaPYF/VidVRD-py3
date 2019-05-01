@@ -95,7 +95,11 @@ if __name__ == '__main__':
     splits = ['train', 'test']
     st_prediction = 'baseline/vidvrd-dataset/vidvrd-baseline-output/short-term-predication.json'
 
-    test_result_name = 'mht_test_relation_prediction_v3.json'
+    top_tree = 20
+    overlap = 0.2
+    iou_thr = 0.2
+    test_result_name = 'mht_test_relation_prediction_v4_{}_{}_{}.json'.format(top_tree, overlap, iou_thr)
+
     prediction = os.path.join('baseline/vidvrd-dataset/vidvrd-baseline-output/models', test_result_name)
 
     short = False

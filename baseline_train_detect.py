@@ -196,7 +196,8 @@ def train():
     model.train(dataset, param)
 
 
-def detect(re_detect=True, save_path='my_test_relation_prediction.json'):
+def detect(re_detect=True, save_path='my_test_relation_prediction.json',
+           top_tree=10, overlap=0.3, iou_thr=0.3):
     dataset = VidVRD(anno_rpath=anno_rpath,
                      video_rpath=video_rpath,
                      splits=splits)
@@ -218,7 +219,8 @@ def detect(re_detect=True, save_path='my_test_relation_prediction.json'):
     video_relations = dict()
     for vid in tqdm(short_term_relations.keys()):
         # res = association.greedy_relational_association(short_term_relations[vid], param['seg_topk'])
-        res = origin_mht_relational_association(short_term_relations[vid], param['seg_topk'], top_tree=10)
+        res = origin_mht_relational_association(short_term_relations[vid], param['seg_topk'],
+                                                top_tree=top_tree, overlap=overlap, iou_thr=iou_thr)
         res = sorted(res, key=lambda r: r['score'], reverse=True)[:param['video_topk']]
         video_relations[vid] = res
     # save detection result
@@ -250,6 +252,11 @@ if __name__ == '__main__':
 
     # could run directly on Pycharm:
     # train()
-    save_path = 'mht_test_relation_prediction_v3.json'
-    detect(False, save_path)
+    top_tree = 50
+    overlap = 0.2
+    iou_thr = 0.2
+    save_path = 'mht_test_relation_prediction_v4_{}_{}_{}.json'.format(top_tree, overlap, iou_thr)
+    detect(False, save_path, top_tree, overlap, iou_thr)
+    print("Save result to:", save_path)
+
     # eval_short_term_relation()

@@ -13,13 +13,14 @@ splits = ['train', 'test']
 so_id = dict()
 
 
+
 def origin_mht_relational_association(short_term_relations,
                                       truncate_per_segment=100, top_tree=5, overlap=0.3, iou_thr=0.3):
     """
     This is not the very official MHT framework, which mainly is 4 frame-level.
     This func is to associating short-term-relations relational.
-    :param overlap: overlap 4 obj id, higher, more obj, more trees
-    :param iou_thr: iou for associate, higher, less trees
+    :param overlap: overlap 4 obj id, higher, more
+    :param iou_thr: iou for associate, higher, less
     :param top_tree:
     :param short_term_relations:
     :param truncate_per_segment:
@@ -67,15 +68,34 @@ def origin_mht_relational_association(short_term_relations,
                     track_tree.add(new_tree_node, track_tree.tree)
                 else:
                     for each_path in track_tree.get_paths():
+                        if new_tree_node.st_predicate not in [i[0] for i in get_path_predicate_score(each_path)]:
+                            iou_thr = 0.
                         if gating(each_path[-1], new_tree_node, iou_thr):
-                                track_tree.add(new_tree_node, each_path[-1])
-
+                            track_tree.add(new_tree_node, each_path[-1])
+                        else:
+                            if each_path[-1].duration[1] == new_tree_node.duration[0]:
+                                missing_node = TreeNode(name=each_path[-1].name,
+                                                        so_labels=each_path[-1].so_labels,
+                                                        score=each_path[-1].score,
+                                                        st_predicate=each_path[-1].st_predicate,
+                                                        subj_tracklet=each_path[-1].subj_tracklet,
+                                                        obj_tracklet=each_path[-1].obj_tracklet,
+                                                        duration=[each_path[-1].duration[0] + 15, each_path[-1].duration[1] + 15])
+                                if gating(missing_node, new_tree_node, iou_thr):
+                                    track_tree.add(missing_node, each_path[-1])
+                                    track_tree.add(new_tree_node, missing_node)
     # generate results
     video_relation_list = list()
+    # st_pred_set = set()
+
     for each_pair, each_tree in tree_dict.items():
+        # for each_path in each_tree.get_paths():
+        #     for each_node in each_path:
+        #         st_pred_set.add(each_node.st_predicate)
         top_k_paths, top_k_scores = generate_results(each_tree, top_tree)
         for each_path in top_k_paths:
             video_relation_list.append(associate_path(each_path))
+    # print(len(st_pred_set), st_pred_set)
     return [r.serialize() for r in video_relation_list]
 
 
