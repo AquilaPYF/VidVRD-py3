@@ -92,8 +92,8 @@ class Dataset(object):
     def get_triplets(self, split):
         triplets = set()
         for vid in self.get_index(split):
-            insts = self.get_relation_insts(vid, no_traj=True)
-            triplets.update(inst['triplet'] for inst in insts)
+            for inst in self.get_relation_insts(vid, no_traj=True):
+                triplets.update(inst['triplet'])
         return triplets
 
     def get_index(self, split):

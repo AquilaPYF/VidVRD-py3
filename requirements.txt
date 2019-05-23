@@ -8,3 +8,4 @@ h5py
 opencv-python
 matplotlib
 networkx
+scikit-image
