@@ -14,6 +14,8 @@ from utils import create_video, profile
 
 # from IPython import embed
 
+gpu_fr_det_path = '/storage/dldi/PyProjects/FasterRCNN4VidVRDT1/data/output/res101/vidor/faster_rcnn_1_4_283995.pth'
+
 _fr_det_root = '/home/xdshang/workspace/mm17/py_faster_rcnn/output/faster_rcnn_end2end/imagenet-vid_2016_relation1/resnet101_faster_rcnn_bn_scale_merged_end2end_2nd_iter_80000'
 
 
