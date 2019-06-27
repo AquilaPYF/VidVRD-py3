@@ -1,0 +1,21 @@
+{
+    "model_name": "baseline",
+    "rng_seed": 1701,
+    "max_sampling_in_batch": 32,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "max_iter": 5000,
+    "display_freq": 1,
+    "save_freq": 5000,
+    "epsilon": 1e-08,
+    "pair_topk": 20,
+    "seg_topk": 100,
+    "video_topk": 200,
+    "phase": "train",
+    "object_num": 35,
+    "predicate_num": 132,
+    "feature_dim": 11070,
+    "triplet_num": 2961,
+    "model_dump_file": "baseline_weights_iter_5000.h5"
+}
