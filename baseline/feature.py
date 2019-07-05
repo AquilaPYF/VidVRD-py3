@@ -10,6 +10,7 @@ from baseline import *
 
 class SharedArray(object):
     """Numpy array that uses sharedctypes to store data"""
+
     def __init__(self, shape, dtype=np.float32):
         # Compute total number of elements
         size = np.prod(shape)
@@ -27,9 +28,9 @@ class SharedArray(object):
     def set_value(self, value):
         nparr = np.ctypeslib.as_array(self.data)
         nparr.shape = self.shape
-        nparr[...] = value.astype(self.dtype, copy = False)
+        nparr[...] = value.astype(self.dtype, copy=False)
 
-    def get_value(self, copy = True):
+    def get_value(self, copy=True):
         nparr = np.ctypeslib.as_array(self.data)
         nparr.shape = self.shape
         if copy:
@@ -43,6 +44,7 @@ class FeatureExtractor(Process):
     Generate feature for a (vid, fstart, fend) every call
     Class for prefetching data in a separate process
     """
+
     def __init__(self, dataset, prefetch_count=2):
         super(FeatureExtractor, self).__init__()
         self.dataset = dataset
